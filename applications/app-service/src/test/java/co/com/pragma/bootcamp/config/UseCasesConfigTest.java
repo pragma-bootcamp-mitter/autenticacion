@@ -1,6 +1,9 @@
 package co.com.pragma.bootcamp.config;
 
+import co.com.pragma.bootcamp.model.user.gateways.UserRepository;
+import co.com.pragma.bootcamp.usecase.user.UserUseCase;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,9 +33,17 @@ public class UseCasesConfigTest {
     @Import(UseCasesConfig.class)
     static class TestConfig {
 
+        @Mock
+        private UserRepository userRepository;
+
         @Bean
         public MyUseCase myUseCase() {
             return new MyUseCase();
+        }
+
+        @Bean
+        public UserUseCase userUseCase() {
+            return new UserUseCase(userRepository);
         }
     }
 

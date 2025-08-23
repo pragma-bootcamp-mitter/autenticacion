@@ -1,0 +1,10 @@
+package co.com.pragma.bootcamp.r2dbc;
+
+import co.com.pragma.bootcamp.r2dbc.dto.UserData;
+import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Mono;
+
+public interface UserDataRepository extends ReactiveCrudRepository<UserData, String>, ReactiveQueryByExampleExecutor<UserData> {
+    Mono<UserData> findByCorreoElectronico(String correoElectronico);
+}
