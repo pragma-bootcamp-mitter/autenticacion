@@ -25,9 +25,9 @@ cors:
 
 adapters:
   r2dbc:
-    host: localhost
-    port: 5432
-    database: autenticacion
-    username: postgres
-    password: Mauro.317
-    schema: public
+    host: ${DB_HOST:localhost}
+    port: ${DB_PORT:5432}
+    database: ${DB_NAME:autenticacion}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:}
+    schema: ${DB_SCHEMA:public}

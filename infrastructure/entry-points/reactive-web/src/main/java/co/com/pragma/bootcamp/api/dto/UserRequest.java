@@ -1,17 +1,11 @@
-package co.com.pragma.bootcamp.model.user;
-import lombok.Builder;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+package co.com.pragma.bootcamp.api.dto;
+
+import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder(toBuilder = true)
-public class User {
-    private String id;
+@Data
+public class UserRequest {
     private String nombres;
     private String apellidos;
     private LocalDate fechaNacimiento;

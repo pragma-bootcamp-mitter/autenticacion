@@ -1,6 +1,6 @@
 package co.com.pragma.bootcamp.r2dbc;
 
-import co.com.pragma.bootcamp.r2dbc.dto.UserData;
+import co.com.pragma.bootcamp.r2dbc.entity.UserData;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Mono;

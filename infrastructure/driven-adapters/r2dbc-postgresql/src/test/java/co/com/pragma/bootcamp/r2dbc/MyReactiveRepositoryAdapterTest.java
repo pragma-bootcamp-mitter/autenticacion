@@ -1,7 +1,8 @@
 package co.com.pragma.bootcamp.r2dbc;
 
 import co.com.pragma.bootcamp.model.user.User;
-import co.com.pragma.bootcamp.r2dbc.dto.UserData;
+import co.com.pragma.bootcamp.r2dbc.entity.UserData;
+import co.com.pragma.bootcamp.r2dbc.mapper.UserMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,7 +30,7 @@ class MyReactiveRepositoryAdapterTest {
     UserDataRepository repository;
 
     @Mock
-    ObjectMapper mapper;
+    UserMapper userMapper; // cambiamos ObjectMapper -> UserMapper
 
     private UserData sampleData() {
         return UserData.builder()
@@ -57,13 +58,14 @@ class MyReactiveRepositoryAdapterTest {
                 .build();
     }
 
+
     @Test
     void mustFindValueById() {
         UserData data = sampleData();
         User domain = sampleDomain();
 
         when(repository.findById("1")).thenReturn(Mono.just(data));
-        when(mapper.map(data, User.class)).thenReturn(domain);
+        when(userMapper.toDomain(data)).thenReturn(domain);
 
         Mono<User> result = repositoryAdapter.findById("1");
 
@@ -78,7 +80,7 @@ class MyReactiveRepositoryAdapterTest {
         User domain = sampleDomain();
 
         when(repository.findAll()).thenReturn(Flux.just(data));
-        when(mapper.map(data, User.class)).thenReturn(domain);
+        when(userMapper.toDomain(data)).thenReturn(domain);
 
         Flux<User> result = repositoryAdapter.findAll();
 
@@ -87,31 +89,14 @@ class MyReactiveRepositoryAdapterTest {
                 .verifyComplete();
     }
 
-    //@Test
-    void mustFindByExample() {
-        UserData data = sampleData();
-        User domain = sampleDomain();
-
-        when(repository.findAll(any(Example.class))).thenReturn(Flux.just(data));
-        when(mapper.map(data, User.class)).thenReturn(domain);
-
-        // pasamos un User como ejemplo (el adapter convierte a UserData internamente)
-        Flux<User> result = repositoryAdapter.findByExample(domain);
-
-        StepVerifier.create(result)
-                .expectNextMatches(u -> u.getApellidos().equals("Pérez"))
-                .verifyComplete();
-    }
-
     @Test
     void mustSaveValue() {
         UserData data = sampleData();
         User domain = sampleDomain();
 
-        // Para save, el adapter hace: toData(User) -> repository.save(UserData) -> toEntity(UserData)
-        when(mapper.map(domain, UserData.class)).thenReturn(data);
+        when(userMapper.toData(domain)).thenReturn(data);
         when(repository.save(data)).thenReturn(Mono.just(data));
-        when(mapper.map(data, User.class)).thenReturn(domain);
+        when(userMapper.toDomain(data)).thenReturn(domain);
 
         Mono<User> result = repositoryAdapter.save(domain);
 
@@ -126,7 +111,7 @@ class MyReactiveRepositoryAdapterTest {
         User domain = sampleDomain();
 
         when(repository.findByCorreoElectronico("juan@example.com")).thenReturn(Mono.just(data));
-        when(mapper.map(data, User.class)).thenReturn(domain);
+        when(userMapper.toDomain(data)).thenReturn(domain);
 
         Mono<User> result = repositoryAdapter.findByCorreoElectronico("juan@example.com");
 
@@ -134,4 +119,5 @@ class MyReactiveRepositoryAdapterTest {
                 .expectNextMatches(u -> u.getCorreoElectronico().equals("juan@example.com"))
                 .verifyComplete();
     }
+
 }

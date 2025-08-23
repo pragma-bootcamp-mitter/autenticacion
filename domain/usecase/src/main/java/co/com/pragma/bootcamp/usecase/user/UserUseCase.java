@@ -1,5 +1,6 @@
 package co.com.pragma.bootcamp.usecase.user;
 
+import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import co.com.pragma.bootcamp.model.user.User;
 import co.com.pragma.bootcamp.model.user.gateways.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,8 @@ public class UserUseCase {
     public Mono<User> registrarUsuario(User user) {
         return validarUsuario(user)
                 .then(userRepository.findByCorreoElectronico(user.getCorreoElectronico())
-                        .flatMap(existing -> Mono.<User>error(new IllegalArgumentException("El correo ya está registrado")))
+                        .flatMap(existing ->
+                                Mono.<User>error(new BusinessException("El correo ya está registrado")))
                         .switchIfEmpty(userRepository.save(user))
                 );
     }

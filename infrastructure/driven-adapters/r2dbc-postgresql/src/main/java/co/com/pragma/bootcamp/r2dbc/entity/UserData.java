@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.r2dbc.dto;
+package co.com.pragma.bootcamp.r2dbc.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @Table("usuarios")
 public class UserData {
