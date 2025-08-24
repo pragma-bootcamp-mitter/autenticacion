@@ -1,5 +1,6 @@
 package co.com.pragma.bootcamp.api;
 
+import co.com.pragma.bootcamp.api.dto.UserResponse;
 import co.com.pragma.bootcamp.api.mapper.UserDtoMapper;
 import co.com.pragma.bootcamp.model.user.User;
 import co.com.pragma.bootcamp.usecase.user.UserUseCase;
@@ -8,12 +9,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -22,17 +22,17 @@ import java.util.Map;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-//@ContextConfiguration(classes = {UserRouter.class, UserHandler.class, UserUseCase.class, UserDtoMapper.class})
-//@WebFluxTest
+@ContextConfiguration(classes = {UserRouter.class, UserHandler.class})
+@WebFluxTest
 class UserRouterTest {
 
-    //@Autowired
+    @Autowired
     private WebTestClient webTestClient;
 
-    @MockBean
+    @MockitoBean
     private UserUseCase userUseCase;
 
-    @MockBean
+    @MockitoBean
     private UserDtoMapper userDtoMapper;
 
     private User expectedUser() {
@@ -41,22 +41,39 @@ class UserRouterTest {
                 "John",
                 "Doe",
                 LocalDate.of(1990, 5, 15),
-                "",
-                "",
-                "",
+                "Calle Falsa 123",
+                "3001234567",
+                "john.doe@test.com",
                 new BigDecimal("50000.00")
         );
     }
 
-    //@BeforeEach
+    @BeforeEach
     void setup() {
+        User domainUser = expectedUser();
+
+        when(userDtoMapper.toDomain(any()))
+                .thenReturn(domainUser);
+
         when(userUseCase.registrarUsuario(any(User.class)))
-                .thenReturn(Mono.just(expectedUser()));
+                .thenReturn(Mono.just(domainUser));
+
+        when(userDtoMapper.toResponse(any(User.class)))
+                .thenAnswer(invocation -> {
+                    User u = invocation.getArgument(0);
+                    UserResponse response = new UserResponse();
+                    response.setId(u.getId());
+                    response.setNombres(u.getNombres());
+                    response.setApellidos(u.getApellidos());
+                    response.setFechaNacimiento(u.getFechaNacimiento());
+                    response.setSalarioBase(u.getSalarioBase());
+                    return response;
+                });
     }
 
 
 
-    //@Test
+    @Test
     void testListenPOSTUseCase() {
         Map<String, Object> body = new HashMap<>();
         body.put("nombres", "John");
@@ -71,7 +88,10 @@ class UserRouterTest {
                 .bodyValue(body)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(userResponse -> Assertions.assertThat(userResponse).isNotNull());
+                .expectBody(UserResponse.class)
+                .value(userResponse -> {
+                    Assertions.assertThat(userResponse.getId()).isEqualTo("12345");
+                    Assertions.assertThat(userResponse.getNombres()).isEqualTo("John");
+                });
     }
 }

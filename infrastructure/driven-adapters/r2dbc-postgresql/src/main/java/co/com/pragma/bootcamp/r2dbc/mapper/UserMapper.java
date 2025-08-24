@@ -7,7 +7,6 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    // Dominio ↔ DB
     UserData toData(User user);
     User toDomain(UserData data);
 }

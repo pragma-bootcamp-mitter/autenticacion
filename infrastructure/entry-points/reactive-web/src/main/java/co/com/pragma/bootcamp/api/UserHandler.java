@@ -1,14 +1,14 @@
 package co.com.pragma.bootcamp.api;
 
-
 import co.com.pragma.bootcamp.api.dto.UserRequest;
 import co.com.pragma.bootcamp.api.mapper.UserDtoMapper;
 import co.com.pragma.bootcamp.usecase.user.UserUseCase;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
@@ -16,6 +16,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
+@Tag(name = "Usuarios", description = "Operaciones relacionadas con usuarios")
 @Component
 @RequiredArgsConstructor
 public class UserHandler {
@@ -23,6 +24,7 @@ public class UserHandler {
     private final UserUseCase userUseCase;
     private final UserDtoMapper userDtoMapper;
 
+    @Operation(summary = "Registrar un nuevo usuario", description = "Crea un usuario en el sistema con datos personales básicos.")
     public Mono<ServerResponse> registrarUsuario(ServerRequest request) {
         return request.bodyToMono(UserRequest.class)
                 .map(userDtoMapper::toDomain)
