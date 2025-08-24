@@ -38,6 +38,7 @@ class UserRouterTest {
     private User expectedUser() {
         return new User(
                 "12345",
+                "12345",
                 "John",
                 "Doe",
                 LocalDate.of(1990, 5, 15),

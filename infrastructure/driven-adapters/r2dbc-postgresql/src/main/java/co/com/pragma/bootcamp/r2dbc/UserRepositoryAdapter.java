@@ -39,4 +39,10 @@ public class UserRepositoryAdapter
         return userDataRepository.findByCorreoElectronico(correoElectronico)
                 .map(userMapper::toDomain);
     }
+
+    @Override
+    public Mono<User> findByDocumentoIdentidad(String documentoIdentidad) {
+        return repository.findByDocumentoIdentidad(documentoIdentidad)
+                .map(userMapper::toDomain);
+    }
 }

@@ -1,6 +1,7 @@
 package co.com.pragma.bootcamp.api;
 
 import co.com.pragma.bootcamp.api.dto.UserRequest;
+import co.com.pragma.bootcamp.api.dto.UserResponse;
 import co.com.pragma.bootcamp.api.mapper.UserDtoMapper;
 import co.com.pragma.bootcamp.usecase.user.UserUseCase;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,5 +39,23 @@ public class UserHandler {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(Map.of("error", e.getMessage()))
                 );
+    }
+
+    @Operation(summary = "Listar todos los usuarios")
+    public Mono<ServerResponse> listarUsuarios(ServerRequest request) {
+        return ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(userUseCase.listarUsuarios().map(userDtoMapper::toResponse), UserResponse.class);
+    }
+
+    @Operation(summary = "Obtener usuario por documento de identidad")
+    public Mono<ServerResponse> obtenerUsuarioPorDocumento(ServerRequest request) {
+        String documento = request.pathVariable("documento");
+        return userUseCase.obtenerUsuarioPorDocumento(documento)
+                .map(userDtoMapper::toResponse)
+                .flatMap(user -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(user))
+                .switchIfEmpty(ServerResponse.notFound().build());
     }
 }

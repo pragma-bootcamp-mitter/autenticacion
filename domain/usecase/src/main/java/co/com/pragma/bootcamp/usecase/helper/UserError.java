@@ -4,7 +4,8 @@ public enum UserError {
     MISSING_FIELDS("Campos obligatorios faltantes"),
     INVALID_EMAIL("Correo inválido"),
     SALARY_OUT_OF_RANGE("Salario fuera de rango"),
-    EMAIL_ALREADY_EXISTS("El correo ya está registrado");
+    EMAIL_ALREADY_EXISTS("El correo ya está registrado"),
+    USER_NOT_FOUND("Usuario no encontrado");
 
     private final String message;
 

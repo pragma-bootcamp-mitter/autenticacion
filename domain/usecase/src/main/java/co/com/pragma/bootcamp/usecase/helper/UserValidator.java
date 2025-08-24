@@ -2,7 +2,6 @@ package co.com.pragma.bootcamp.usecase.helper;
 
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import co.com.pragma.bootcamp.model.user.User;
-
 import java.math.BigDecimal;
 import java.util.regex.Pattern;
 
@@ -22,6 +21,10 @@ public class UserValidator {
         if (!EMAIL_PATTERN.matcher(user.getCorreoElectronico()).matches()) {
             throw new BusinessException(UserError.INVALID_EMAIL.getMessage());
         }
+
+//        if (user.getDocumentoIdentidad() == null || user.getDocumentoIdentidad().isBlank()) {
+//            throw new BusinessException(UserError.MISSING_DOCUMENT.getMessage());
+//        }
 
         BigDecimal salario = user.getSalarioBase();
         if (salario.compareTo(BigDecimal.ZERO) < 0 || salario.compareTo(MAX_SALARIO) > 0) {

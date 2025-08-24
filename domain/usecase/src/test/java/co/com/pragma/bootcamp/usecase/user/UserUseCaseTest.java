@@ -12,10 +12,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-
 import java.math.BigDecimal;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserUseCaseTest {
@@ -32,6 +34,7 @@ class UserUseCaseTest {
     void setUp() {
         validUser = User.builder()
                 .id("1")
+                .documentoIdentidad("12345")
                 .nombres("Juan")
                 .apellidos("Pérez")
                 .correoElectronico("juan@example.com")
@@ -72,10 +75,10 @@ class UserUseCaseTest {
     @Test
     void registrarUsuario_debeFallarCuandoUsuarioInvalido() {
         User invalidUser = User.builder()
-                .nombres("") // vacío
+                .nombres("")
                 .apellidos("Pérez")
-                .correoElectronico("correo-malo") // formato inválido
-                .salarioBase(BigDecimal.valueOf(-1000)) // fuera de rango
+                .correoElectronico("correo-malo")
+                .salarioBase(BigDecimal.valueOf(-1000))
                 .build();
 
         StepVerifier.create(userUseCase.registrarUsuario(invalidUser))

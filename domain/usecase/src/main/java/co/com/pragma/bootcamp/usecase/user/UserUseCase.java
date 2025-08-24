@@ -6,6 +6,7 @@ import co.com.pragma.bootcamp.model.user.gateways.UserRepository;
 import co.com.pragma.bootcamp.usecase.helper.UserError;
 import co.com.pragma.bootcamp.usecase.helper.UserValidator;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
@@ -21,7 +22,18 @@ public class UserUseCase {
         }
 
         return userRepository.findByCorreoElectronico(user.getCorreoElectronico())
-                .flatMap(existing -> Mono.<User>error(new BusinessException(UserError.EMAIL_ALREADY_EXISTS.getMessage())))
+                .flatMap(existing -> Mono.<User>error(
+                        new BusinessException(UserError.EMAIL_ALREADY_EXISTS.getMessage())))
                 .switchIfEmpty(Mono.defer(() -> userRepository.save(user)));
+    }
+
+    public Flux<User> listarUsuarios() {
+        return userRepository.findAll();
+    }
+
+    public Mono<User> obtenerUsuarioPorDocumento(String documentoIdentidad) {
+        return userRepository.findByDocumentoIdentidad(documentoIdentidad)
+                .switchIfEmpty(Mono.error(
+                        new BusinessException(UserError.USER_NOT_FOUND.getMessage())));
     }
 }

@@ -7,6 +7,7 @@ import java.time.LocalDate;
 @Data
 public class UserResponse {
     private String id;
+    private String documentoIdentidad;
     private String nombres;
     private String apellidos;
     private LocalDate fechaNacimiento;

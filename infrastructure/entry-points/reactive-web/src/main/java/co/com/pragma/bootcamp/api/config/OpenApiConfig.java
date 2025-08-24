@@ -4,6 +4,8 @@ import co.com.pragma.bootcamp.api.UserHandler;
 import co.com.pragma.bootcamp.api.dto.UserRequest;
 import co.com.pragma.bootcamp.api.dto.UserResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -52,14 +54,54 @@ public class OpenApiConfig {
                             tags = {"Usuarios"},
                             requestBody = @RequestBody(
                                     required = true,
-                                    content = @Content(
-                                            schema = @Schema(implementation = UserRequest.class)
-                                    )
+                                    content = @Content(schema = @Schema(implementation = UserRequest.class))
                             ),
                             responses = {
-                                    @ApiResponse(responseCode = "201", description = "Usuario creado",
+                                    @ApiResponse(responseCode = "200", description = "Usuario creado",
                                             content = @Content(schema = @Schema(implementation = UserResponse.class))),
-                                    @ApiResponse(responseCode = "400", description = "Error de validación")
+                                    @ApiResponse(responseCode = "409", description = "Correo ya registrado")
+                            }
+                    )
+            ),
+            @RouterOperation(
+                    path = "/api/v1/usuarios",
+                    produces = { "application/json" },
+                    method = RequestMethod.GET,
+                    beanClass = UserHandler.class,
+                    beanMethod = "listarUsuarios",
+                    operation = @Operation(
+                            operationId = "listarUsuarios",
+                            summary = "Listar todos los usuarios",
+                            tags = {"Usuarios"},
+                            responses = {
+                                    @ApiResponse(responseCode = "200", description = "Listado de usuarios",
+                                            content = @Content(schema = @Schema(implementation = UserResponse.class)))
+                            }
+                    )
+            ),
+            @RouterOperation(
+                    path = "/api/v1/usuarios/{documento}",
+                    produces = {"application/json"},
+                    method = RequestMethod.GET,
+                    beanClass = UserHandler.class,
+                    beanMethod = "obtenerUsuarioPorDocumento",
+                    operation = @Operation(
+                            operationId = "obtenerUsuarioPorDocumento",
+                            summary = "Obtener usuario por documento de identidad",
+                            tags = {"Usuarios"},
+                            parameters = {
+                                    @Parameter(
+                                            name = "documento",
+                                            in = ParameterIn.PATH,
+                                            required = true,
+                                            description = "Número de documento",
+                                            example = "123456789"
+                                    )
+                            },
+                            responses = {
+                                    @ApiResponse(responseCode = "200", description = "Usuario encontrado",
+                                            content = @Content(schema = @Schema(implementation = UserResponse.class))),
+                                    @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
                             }
                     )
             )
