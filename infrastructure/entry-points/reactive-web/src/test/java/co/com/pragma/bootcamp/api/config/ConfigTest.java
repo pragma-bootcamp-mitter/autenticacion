@@ -13,9 +13,12 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -30,16 +33,26 @@ class ConfigTest {
     @MockitoBean
     private UserUseCase userUseCase;
 
+    private User sampleUser;
+
     @BeforeEach
     void setup() {
+        sampleUser = User.builder()
+                .id("12345")
+                .nombres("John")
+                .apellidos("Doe")
+                .fechaNacimiento(LocalDate.of(1990, 5, 15))
+                .salarioBase(new BigDecimal("50000.00"))
+                .build();
+
         when(userUseCase.registrarUsuario(any(User.class)))
-                .thenReturn(Mono.just(User.builder()
-                        .id("12345")
-                        .nombres("John")
-                        .apellidos("Doe")
-                        .fechaNacimiento(LocalDate.of(1990, 5, 15))
-                        .salarioBase(new BigDecimal("50000.00"))
-                        .build()));
+                .thenReturn(Mono.just(sampleUser));
+
+        when(userUseCase.listarUsuarios())
+                .thenReturn(Flux.fromIterable(List.of(sampleUser)));
+
+        when(userUseCase.obtenerUsuarioPorDocumento("12345"))
+                .thenReturn(Mono.just(sampleUser));
     }
 
     @Test
@@ -47,6 +60,42 @@ class ConfigTest {
         webTestClient.post()
                 .uri("/api/v1/usuarios")
                 .bodyValue(User.builder().build())
+                .exchange()
+                .expectStatus().isOk()
+                // Security headers
+                .expectHeader().valueEquals("Content-Security-Policy",
+                        "default-src 'self'; frame-ancestors 'self'; form-action 'self'")
+                .expectHeader().valueEquals("Strict-Transport-Security", "max-age=31536000;")
+                .expectHeader().valueEquals("X-Content-Type-Options", "nosniff")
+                .expectHeader().valueEquals("Server", "")
+                .expectHeader().valueEquals("Cache-Control", "no-store")
+                .expectHeader().valueEquals("Pragma", "no-cache")
+                .expectHeader().valueEquals("Referrer-Policy", "strict-origin-when-cross-origin");
+    }
+
+
+
+    @Test
+    void corsAndSecurityHeadersShouldBeAppliedOnGetAll() {
+        webTestClient.get()
+                .uri("/api/v1/usuarios")
+                .exchange()
+                .expectStatus().isOk()
+                // Security headers
+                .expectHeader().valueEquals("Content-Security-Policy",
+                        "default-src 'self'; frame-ancestors 'self'; form-action 'self'")
+                .expectHeader().valueEquals("Strict-Transport-Security", "max-age=31536000;")
+                .expectHeader().valueEquals("X-Content-Type-Options", "nosniff")
+                .expectHeader().valueEquals("Server", "")
+                .expectHeader().valueEquals("Cache-Control", "no-store")
+                .expectHeader().valueEquals("Pragma", "no-cache")
+                .expectHeader().valueEquals("Referrer-Policy", "strict-origin-when-cross-origin");
+    }
+
+    @Test
+    void corsAndSecurityHeadersShouldBeAppliedOnGetByDocumento() {
+        webTestClient.get()
+                .uri("/api/v1/usuarios/12345")
                 .exchange()
                 .expectStatus().isOk()
                 // Security headers

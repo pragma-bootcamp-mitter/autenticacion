@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -35,8 +36,11 @@ class UserRouterTest {
     @MockitoBean
     private UserDtoMapper userDtoMapper;
 
-    private User expectedUser() {
-        return new User(
+    private User expectedUser;
+
+    @BeforeEach
+    void setup() {
+        expectedUser = new User(
                 "12345",
                 "12345",
                 "John",
@@ -47,17 +51,12 @@ class UserRouterTest {
                 "john.doe@test.com",
                 new BigDecimal("50000.00")
         );
-    }
-
-    @BeforeEach
-    void setup() {
-        User domainUser = expectedUser();
 
         when(userDtoMapper.toDomain(any()))
-                .thenReturn(domainUser);
+                .thenReturn(expectedUser);
 
         when(userUseCase.registrarUsuario(any(User.class)))
-                .thenReturn(Mono.just(domainUser));
+                .thenReturn(Mono.just(expectedUser));
 
         when(userDtoMapper.toResponse(any(User.class)))
                 .thenAnswer(invocation -> {
@@ -71,8 +70,6 @@ class UserRouterTest {
                     return response;
                 });
     }
-
-
 
     @Test
     void testListenPOSTUseCase() {
@@ -94,5 +91,52 @@ class UserRouterTest {
                     Assertions.assertThat(userResponse.getId()).isEqualTo("12345");
                     Assertions.assertThat(userResponse.getNombres()).isEqualTo("John");
                 });
+    }
+
+
+    @Test
+    void testListenGETAllUsers() {
+        when(userUseCase.listarUsuarios()).thenReturn(Flux.just(expectedUser));
+
+        webTestClient.get()
+                .uri("/api/v1/usuarios")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(UserResponse.class)
+                .hasSize(1)
+                .value(users -> {
+                    Assertions.assertThat(users.get(0).getId()).isEqualTo("12345");
+                    Assertions.assertThat(users.get(0).getNombres()).isEqualTo("John");
+                });
+    }
+
+    @Test
+    void testListenGETUserByDocumento() {
+        String documento = "12345";
+        when(userUseCase.obtenerUsuarioPorDocumento(documento)).thenReturn(Mono.just(expectedUser));
+
+        webTestClient.get()
+                .uri("/api/v1/usuarios/{documento}", documento)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(UserResponse.class)
+                .value(userResponse -> {
+                    Assertions.assertThat(userResponse.getId()).isEqualTo("12345");
+                    Assertions.assertThat(userResponse.getNombres()).isEqualTo("John");
+                });
+    }
+
+    @Test
+    void testListenGETUserByDocumentoNotFound() {
+        String documento = "99999";
+        when(userUseCase.obtenerUsuarioPorDocumento(documento)).thenReturn(Mono.empty());
+
+        webTestClient.get()
+                .uri("/api/v1/usuarios/{documento}", documento)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isNotFound();
     }
 }
