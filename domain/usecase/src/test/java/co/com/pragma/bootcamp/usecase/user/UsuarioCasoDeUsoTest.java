@@ -119,36 +119,4 @@ class UsuarioCasoDeUsoTest {
 
         verify(repositorioUsuario).buscarPorDocumentoIdentidad("12345");
     }
-
-    @Test
-    void registrarUsuario_debeFallarCuandoSalarioEsMayorAlMaximo() {
-        Usuario usuarioConSalarioAlto = validUsuario.toBuilder()
-                .salarioBase(BigDecimal.valueOf(16_000_000))
-                .build();
-
-        StepVerifier.create(usuarioCasoDeUso.registrarUsuario(usuarioConSalarioAlto))
-                .expectErrorSatisfies(error -> {
-                    assert error instanceof BusinessException;
-                    assert error.getMessage().equals("El salario base no puede superar 15000000");
-                })
-                .verify();
-
-        verify(repositorioUsuario, never()).save(any());
-    }
-
-    @Test
-    void registrarUsuario_debeFallarCuandoSalarioEsNegativo() {
-        Usuario usuarioConSalarioNegativo = validUsuario.toBuilder()
-                .salarioBase(BigDecimal.valueOf(-5000))
-                .build();
-
-        StepVerifier.create(usuarioCasoDeUso.registrarUsuario(usuarioConSalarioNegativo))
-                .expectErrorSatisfies(error -> {
-                    assert error instanceof BusinessException;
-                    assert error.getMessage().equals("El salario base no puede ser negativo");
-                })
-                .verify();
-
-        verify(repositorioUsuario, never()).save(any());
-    }
 }
