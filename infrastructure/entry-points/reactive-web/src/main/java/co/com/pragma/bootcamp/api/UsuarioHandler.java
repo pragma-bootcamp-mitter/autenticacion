@@ -1,9 +1,9 @@
 package co.com.pragma.bootcamp.api;
 
-import co.com.pragma.bootcamp.api.dto.ApiResponse;
-import co.com.pragma.bootcamp.api.dto.UserRequest;
-import co.com.pragma.bootcamp.api.mapper.UserDtoMapper;
-import co.com.pragma.bootcamp.usecase.user.UserUseCase;
+import co.com.pragma.bootcamp.api.dto.RespuestaApi;
+import co.com.pragma.bootcamp.api.dto.SolicitudUsuario;
+import co.com.pragma.bootcamp.api.mapper.MapeadorUsuarioDto;
+import co.com.pragma.bootcamp.usecase.user.UsuarioCasoDeUso;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,19 +18,19 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class UserHandler {
+public class UsuarioHandler {
 
-    private final UserUseCase userUseCase;
-    private final UserDtoMapper userDtoMapper;
+    private final UsuarioCasoDeUso usuarioCasoDeUso;
+    private final MapeadorUsuarioDto mapeadorUsuarioDto;
 
     public Mono<ServerResponse> registrarUsuario(ServerRequest request) {
-        return request.bodyToMono(UserRequest.class)
-                .map(userDtoMapper::toDomain)
-                .flatMap(userUseCase::registrarUsuario)
-                .map(userDtoMapper::toResponse)
+        return request.bodyToMono(SolicitudUsuario.class)
+                .map(mapeadorUsuarioDto::aDominio)
+                .flatMap(usuarioCasoDeUso::registrarUsuario)
+                .map(mapeadorUsuarioDto::aRespuesta)
                 .flatMap(response -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(new ApiResponse<>(true, "Usuario creado exitosamente", response))
+                        .bodyValue(new RespuestaApi<>(true, "Usuario creado exitosamente", response))
                 )
                 .onErrorResume(BusinessException.class, e ->
                         ServerResponse.status(HttpStatus.CONFLICT)
@@ -41,12 +41,12 @@ public class UserHandler {
 
 
     public Mono<ServerResponse> listarUsuarios(ServerRequest request) {
-        return userUseCase.listarUsuarios()
-                .map(userDtoMapper::toResponse)
+        return usuarioCasoDeUso.listarUsuarios()
+                .map(mapeadorUsuarioDto::aRespuesta)
                 .collectList()
                 .flatMap(users -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(new ApiResponse<>(true, "Usuarios obtenidos correctamente", users))
+                        .bodyValue(new RespuestaApi<>(true, "Usuarios obtenidos correctamente", users))
                 );
     }
 
@@ -54,17 +54,17 @@ public class UserHandler {
         String documento = request.pathVariable("documento");
         log.info("Solicitud para obtener usuario con documento: {}", documento);
 
-        return userUseCase.obtenerUsuarioPorDocumento(documento)
-                .map(userDtoMapper::toResponse)
+        return usuarioCasoDeUso.obtenerUsuarioPorDocumento(documento)
+                .map(mapeadorUsuarioDto::aRespuesta)
                 .doOnNext(user -> log.info("Usuario encontrado: {}", user))
                 .flatMap(user -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(new ApiResponse<>(true, "Usuario encontrado", user))
+                        .bodyValue(new RespuestaApi<>(true, "Usuario encontrado", user))
                 )
                 .switchIfEmpty(
                         ServerResponse.status(HttpStatus.NOT_FOUND)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(new ApiResponse<>(false,
+                                .bodyValue(new RespuestaApi<>(false,
                                         "Usuario con documento " + documento + " no encontrado",
                                         null))
                                 .doOnSuccess(r -> log.warn("Usuario con documento {} no encontrado", documento))

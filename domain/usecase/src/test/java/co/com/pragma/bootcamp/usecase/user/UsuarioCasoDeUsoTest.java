@@ -2,8 +2,8 @@ package co.com.pragma.bootcamp.usecase.user;
 
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import co.com.pragma.bootcamp.model.user.Usuario;
-import co.com.pragma.bootcamp.model.user.gateways.UserRepository;
-import co.com.pragma.bootcamp.usecase.helper.UserError;
+import co.com.pragma.bootcamp.model.user.gateways.RepositorioUsuario;
+import co.com.pragma.bootcamp.usecase.helper.ErroresUsuario;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,13 +21,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class UsuarioUseCaseTest {
+class UsuarioCasoDeUsoTest {
 
     @Mock
-    private UserRepository userRepository;
+    private RepositorioUsuario repositorioUsuario;
 
     @InjectMocks
-    private UserUseCase userUseCase;
+    private UsuarioCasoDeUso usuarioCasoDeUso;
 
     private Usuario validUsuario;
 
@@ -45,79 +45,79 @@ class UsuarioUseCaseTest {
 
     @Test
     void registrarUsuario_debeGuardarUsuarioCuandoEsValido() {
-        when(userRepository.existePorCorreoElectronico(validUsuario.getCorreoElectronico()))
+        when(repositorioUsuario.existePorCorreoElectronico(validUsuario.getCorreoElectronico()))
                 .thenReturn(Mono.just(false));
-        when(userRepository.save(validUsuario))
+        when(repositorioUsuario.save(validUsuario))
                 .thenReturn(Mono.just(validUsuario));
 
-        StepVerifier.create(userUseCase.registrarUsuario(validUsuario))
+        StepVerifier.create(usuarioCasoDeUso.registrarUsuario(validUsuario))
                 .expectNext(validUsuario)
                 .verifyComplete();
 
-        verify(userRepository).save(validUsuario);
+        verify(repositorioUsuario).save(validUsuario);
     }
 
     @Test
     void registrarUsuario_debeFallarCuandoCorreoYaExiste() {
-        when(userRepository.existePorCorreoElectronico(validUsuario.getCorreoElectronico()))
+        when(repositorioUsuario.existePorCorreoElectronico(validUsuario.getCorreoElectronico()))
                 .thenReturn(Mono.just(true));
 
-        StepVerifier.create(userUseCase.registrarUsuario(validUsuario))
+        StepVerifier.create(usuarioCasoDeUso.registrarUsuario(validUsuario))
                 .expectErrorSatisfies(error -> {
                     assert error instanceof BusinessException;
-                    assert error.getMessage().equals(UserError.EMAIL_ALREADY_EXISTS.getMessage());
+                    assert error.getMessage().equals(ErroresUsuario.CORREO_YA_REGISTRADO.getMensaje());
                 })
                 .verify();
 
-        verify(userRepository, never()).save(any());
+        verify(repositorioUsuario, never()).save(any());
     }
 
     @Test
     void listarUsuarios_debeRetornarUsuariosCuandoExisten() {
-        when(userRepository.findAll()).thenReturn(Flux.just(validUsuario));
+        when(repositorioUsuario.findAll()).thenReturn(Flux.just(validUsuario));
 
-        StepVerifier.create(userUseCase.listarUsuarios())
+        StepVerifier.create(usuarioCasoDeUso.listarUsuarios())
                 .expectNext(validUsuario)
                 .verifyComplete();
 
-        verify(userRepository).findAll();
+        verify(repositorioUsuario).findAll();
     }
 
     @Test
     void listarUsuarios_debeRetornarVacioCuandoNoExistenUsuarios() {
-        when(userRepository.findAll()).thenReturn(Flux.empty());
+        when(repositorioUsuario.findAll()).thenReturn(Flux.empty());
 
-        StepVerifier.create(userUseCase.listarUsuarios())
+        StepVerifier.create(usuarioCasoDeUso.listarUsuarios())
                 .verifyComplete();
 
-        verify(userRepository).findAll();
+        verify(repositorioUsuario).findAll();
     }
 
     @Test
     void obtenerUsuarioPorDocumento_debeRetornarUsuarioCuandoExiste() {
-        when(userRepository.buscarPorDocumentoIdentidad("12345"))
+        when(repositorioUsuario.buscarPorDocumentoIdentidad("12345"))
                 .thenReturn(Mono.just(validUsuario));
 
-        StepVerifier.create(userUseCase.obtenerUsuarioPorDocumento("12345"))
+        StepVerifier.create(usuarioCasoDeUso.obtenerUsuarioPorDocumento("12345"))
                 .expectNext(validUsuario)
                 .verifyComplete();
 
-        verify(userRepository).buscarPorDocumentoIdentidad("12345");
+        verify(repositorioUsuario).buscarPorDocumentoIdentidad("12345");
     }
 
     @Test
     void obtenerUsuarioPorDocumento_debeFallarCuandoNoExiste() {
-        when(userRepository.buscarPorDocumentoIdentidad("12345"))
+        when(repositorioUsuario.buscarPorDocumentoIdentidad("12345"))
                 .thenReturn(Mono.empty());
 
-        StepVerifier.create(userUseCase.obtenerUsuarioPorDocumento("12345"))
+        StepVerifier.create(usuarioCasoDeUso.obtenerUsuarioPorDocumento("12345"))
                 .expectErrorSatisfies(error -> {
                     assert error instanceof BusinessException;
-                    assert error.getMessage().equals(UserError.USER_NOT_FOUND.getMessage());
+                    assert error.getMessage().equals(ErroresUsuario.USUARIO_NO_ENCONTRADO.getMensaje());
                 })
                 .verify();
 
-        verify(userRepository).buscarPorDocumentoIdentidad("12345");
+        verify(repositorioUsuario).buscarPorDocumentoIdentidad("12345");
     }
 
     @Test
@@ -126,14 +126,14 @@ class UsuarioUseCaseTest {
                 .salarioBase(BigDecimal.valueOf(16_000_000))
                 .build();
 
-        StepVerifier.create(userUseCase.registrarUsuario(usuarioConSalarioAlto))
+        StepVerifier.create(usuarioCasoDeUso.registrarUsuario(usuarioConSalarioAlto))
                 .expectErrorSatisfies(error -> {
                     assert error instanceof BusinessException;
                     assert error.getMessage().equals("El salario base no puede superar 15000000");
                 })
                 .verify();
 
-        verify(userRepository, never()).save(any());
+        verify(repositorioUsuario, never()).save(any());
     }
 
     @Test
@@ -142,13 +142,13 @@ class UsuarioUseCaseTest {
                 .salarioBase(BigDecimal.valueOf(-5000))
                 .build();
 
-        StepVerifier.create(userUseCase.registrarUsuario(usuarioConSalarioNegativo))
+        StepVerifier.create(usuarioCasoDeUso.registrarUsuario(usuarioConSalarioNegativo))
                 .expectErrorSatisfies(error -> {
                     assert error instanceof BusinessException;
                     assert error.getMessage().equals("El salario base no puede ser negativo");
                 })
                 .verify();
 
-        verify(userRepository, never()).save(any());
+        verify(repositorioUsuario, never()).save(any());
     }
 }

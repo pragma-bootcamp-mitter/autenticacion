@@ -1,8 +1,8 @@
 package co.com.pragma.bootcamp.api.config;
 
-import co.com.pragma.bootcamp.api.UserHandler;
-import co.com.pragma.bootcamp.api.dto.UserRequest;
-import co.com.pragma.bootcamp.api.dto.UserResponse;
+import co.com.pragma.bootcamp.api.UsuarioHandler;
+import co.com.pragma.bootcamp.api.dto.SolicitudUsuario;
+import co.com.pragma.bootcamp.api.dto.RespuestaUsuario;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -45,7 +45,7 @@ public class OpenApiConfig {
                     path = "/api/v1/usuarios",
                     produces = { "application/json" },
                     method = RequestMethod.POST,
-                    beanClass = UserHandler.class,
+                    beanClass = UsuarioHandler.class,
                     beanMethod = "registrarUsuario",
                     operation = @Operation(
                             operationId = "registrarUsuario",
@@ -54,11 +54,11 @@ public class OpenApiConfig {
                             tags = {"Usuarios"},
                             requestBody = @RequestBody(
                                     required = true,
-                                    content = @Content(schema = @Schema(implementation = UserRequest.class))
+                                    content = @Content(schema = @Schema(implementation = SolicitudUsuario.class))
                             ),
                             responses = {
                                     @ApiResponse(responseCode = "200", description = "Usuario creado",
-                                            content = @Content(schema = @Schema(implementation = UserResponse.class))),
+                                            content = @Content(schema = @Schema(implementation = RespuestaUsuario.class))),
                                     @ApiResponse(responseCode = "409", description = "Correo ya registrado")
                             }
                     )
@@ -67,7 +67,7 @@ public class OpenApiConfig {
                     path = "/api/v1/usuarios",
                     produces = { "application/json" },
                     method = RequestMethod.GET,
-                    beanClass = UserHandler.class,
+                    beanClass = UsuarioHandler.class,
                     beanMethod = "listarUsuarios",
                     operation = @Operation(
                             operationId = "listarUsuarios",
@@ -75,7 +75,7 @@ public class OpenApiConfig {
                             tags = {"Usuarios"},
                             responses = {
                                     @ApiResponse(responseCode = "200", description = "Listado de usuarios",
-                                            content = @Content(schema = @Schema(implementation = UserResponse.class)))
+                                            content = @Content(schema = @Schema(implementation = RespuestaUsuario.class)))
                             }
                     )
             ),
@@ -83,7 +83,7 @@ public class OpenApiConfig {
                     path = "/api/v1/usuarios/{documento}",
                     produces = {"application/json"},
                     method = RequestMethod.GET,
-                    beanClass = UserHandler.class,
+                    beanClass = UsuarioHandler.class,
                     beanMethod = "obtenerUsuarioPorDocumento",
                     operation = @Operation(
                             operationId = "obtenerUsuarioPorDocumento",
@@ -100,13 +100,13 @@ public class OpenApiConfig {
                             },
                             responses = {
                                     @ApiResponse(responseCode = "200", description = "Usuario encontrado",
-                                            content = @Content(schema = @Schema(implementation = UserResponse.class))),
+                                            content = @Content(schema = @Schema(implementation = RespuestaUsuario.class))),
                                     @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
                             }
                     )
             )
     })
-    public RouterFunction<ServerResponse> router(UserHandler handler) {
+    public RouterFunction<ServerResponse> router(UsuarioHandler handler) {
         return RouterFunctions.route()
                 .POST("/api/v1/usuarios", handler::registrarUsuario)
                 .build();

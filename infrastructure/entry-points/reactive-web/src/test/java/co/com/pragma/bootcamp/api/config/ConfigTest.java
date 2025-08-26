@@ -1,10 +1,12 @@
 package co.com.pragma.bootcamp.api.config;
 
-import co.com.pragma.bootcamp.api.UserHandler;
-import co.com.pragma.bootcamp.api.UserRouter;
-import co.com.pragma.bootcamp.api.mapper.UserDtoMapperImpl;
+import co.com.pragma.bootcamp.api.UsuarioHandler;
+import co.com.pragma.bootcamp.api.UsuarioRouter;
+import co.com.pragma.bootcamp.api.dto.RespuestaUsuario;
+import co.com.pragma.bootcamp.api.dto.SolicitudUsuario;
+import co.com.pragma.bootcamp.api.mapper.MapeadorUsuarioDto;
 import co.com.pragma.bootcamp.model.user.Usuario;
-import co.com.pragma.bootcamp.usecase.user.UserUseCase;
+import co.com.pragma.bootcamp.usecase.user.UsuarioCasoDeUso;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +24,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {UserRouter.class, UserHandler.class, UserDtoMapperImpl.class})
+@ContextConfiguration(classes = {UsuarioRouter.class, UsuarioHandler.class})
 @WebFluxTest
 @Import({CorsConfig.class, SecurityHeadersConfig.class})
 class ConfigTest {
@@ -31,7 +33,10 @@ class ConfigTest {
     private WebTestClient webTestClient;
 
     @MockitoBean
-    private UserUseCase userUseCase;
+    private UsuarioCasoDeUso usuarioCasoDeUso;
+
+    @MockitoBean
+    private MapeadorUsuarioDto mapeadorUsuarioDto;
 
     private Usuario sampleUsuario;
 
@@ -45,24 +50,39 @@ class ConfigTest {
                 .salarioBase(new BigDecimal("50000.00"))
                 .build();
 
-        when(userUseCase.registrarUsuario(any(Usuario.class)))
+        when(usuarioCasoDeUso.registrarUsuario(any(Usuario.class)))
                 .thenReturn(Mono.just(sampleUsuario));
 
-        when(userUseCase.listarUsuarios())
+        when(usuarioCasoDeUso.listarUsuarios())
                 .thenReturn(Flux.fromIterable(List.of(sampleUsuario)));
 
-        when(userUseCase.obtenerUsuarioPorDocumento("12345"))
+        when(usuarioCasoDeUso.obtenerUsuarioPorDocumento("12345"))
                 .thenReturn(Mono.just(sampleUsuario));
+
+        when(mapeadorUsuarioDto.aDominio(any(SolicitudUsuario.class)))
+                .thenAnswer(invocation -> sampleUsuario);
+
+        when(mapeadorUsuarioDto.aRespuesta(any(Usuario.class)))
+                .thenAnswer(invocation -> {
+                    Usuario u = invocation.getArgument(0);
+                    RespuestaUsuario resp = new RespuestaUsuario();
+                    resp.setId(u.getId());
+                    resp.setNombres(u.getNombres());
+                    resp.setApellidos(u.getApellidos());
+                    resp.setFechaNacimiento(u.getFechaNacimiento());
+                    resp.setSalarioBase(u.getSalarioBase());
+                    return resp;
+                });
+
     }
 
     @Test
-    void corsAndSecurityHeadersShouldBeApplied() {
+    void corsYEncabezadosDeSeguridadSeAplicanEnPost() {
         webTestClient.post()
                 .uri("/api/v1/usuarios")
                 .bodyValue(Usuario.builder().build())
                 .exchange()
                 .expectStatus().isOk()
-                // Security headers
                 .expectHeader().valueEquals("Content-Security-Policy",
                         "default-src 'self'; frame-ancestors 'self'; form-action 'self'")
                 .expectHeader().valueEquals("Strict-Transport-Security", "max-age=31536000;")
@@ -76,7 +96,7 @@ class ConfigTest {
 
 
     @Test
-    void corsAndSecurityHeadersShouldBeAppliedOnGetAll() {
+    void corsYEncabezadosDeSeguridadSeAplicanEnGetTodos() {
         webTestClient.get()
                 .uri("/api/v1/usuarios")
                 .exchange()
@@ -93,7 +113,7 @@ class ConfigTest {
     }
 
     @Test
-    void corsAndSecurityHeadersShouldBeAppliedOnGetByDocumento() {
+    void corsYEncabezadosDeSeguridadSeAplicanEnGetPorDocumento() {
         webTestClient.get()
                 .uri("/api/v1/usuarios/12345")
                 .exchange()

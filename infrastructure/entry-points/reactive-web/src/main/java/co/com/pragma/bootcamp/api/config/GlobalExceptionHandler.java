@@ -15,6 +15,9 @@ import java.util.Map;
 @Slf4j
 public class GlobalExceptionHandler {
 
+    private static final String ERROR = "error";
+    private static final String MESSAGE = "message";
+
     @ExceptionHandler(ServerWebInputException.class)
     public Mono<ResponseEntity<Map<String, Object>>> handleValidationErrors(ServerWebInputException ex) {
         log.error("Error de validación: {}", ex.getMessage());
@@ -22,8 +25,8 @@ public class GlobalExceptionHandler {
                 ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(Map.of(
-                                "error", "Datos de entrada inválidos",
-                                "message", ex.getReason()
+                                ERROR, "Datos de entrada inválidos",
+                                MESSAGE, ex.getReason()
                         ))
         );
     }
@@ -34,8 +37,8 @@ public class GlobalExceptionHandler {
                 ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(Map.of(
-                                "error", "Solicitud inválida",
-                                "message", ex.getMessage()
+                                ERROR, "Solicitud inválida",
+                                MESSAGE, ex.getMessage()
                         ))
         );
     }
@@ -47,8 +50,8 @@ public class GlobalExceptionHandler {
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(Map.of(
-                                "error", "Error interno del servidor",
-                                "message", "Ha ocurrido un error inesperado"
+                                ERROR, "Error interno del servidor",
+                                MESSAGE, "Ha ocurrido un error inesperado"
                         ))
         );
     }

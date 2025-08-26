@@ -1,7 +1,7 @@
 package co.com.pragma.bootcamp.r2dbc;
 
 import co.com.pragma.bootcamp.model.user.Usuario;
-import co.com.pragma.bootcamp.r2dbc.entity.UserData;
+import co.com.pragma.bootcamp.r2dbc.entidad.UsuarioEntidad;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,19 +18,19 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class UsuarioRepositoryAdapterTest {
+class RepositorioUsuarioAdapterTest {
 
     @InjectMocks
-    UserRepositoryAdapter repositoryAdapter;
+    RepositorioUsuarioAdapter repositoryAdapter;
 
     @Mock
-    UserDataRepository repository;
+    RepositorioDatosUsuario repository;
 
     @Mock
     ObjectMapper mapper;
 
-    private UserData sampleData() {
-        return UserData.builder()
+    private UsuarioEntidad sampleData() {
+        return UsuarioEntidad.builder()
                 .id("1")
                 .nombres("Juan")
                 .apellidos("Pérez")
@@ -57,7 +57,7 @@ class UsuarioRepositoryAdapterTest {
 
     @Test
     void debeEncontrarUsuarioPorId() {
-        UserData data = sampleData();
+        UsuarioEntidad data = sampleData();
         Usuario domain = sampleDomain();
 
         when(repository.findById("1")).thenReturn(Mono.just(data));
@@ -78,7 +78,7 @@ class UsuarioRepositoryAdapterTest {
 
     @Test
     void debeListarTodosLosUsuarios() {
-        UserData data = sampleData();
+        UsuarioEntidad data = sampleData();
         Usuario domain = sampleDomain();
 
         when(repository.findAll()).thenReturn(Flux.just(data));
@@ -97,10 +97,10 @@ class UsuarioRepositoryAdapterTest {
 
     @Test
     void debeGuardarUsuario() {
-        UserData data = sampleData();
+        UsuarioEntidad data = sampleData();
         Usuario domain = sampleDomain();
 
-        lenient().when(mapper.map(domain, UserData.class)).thenReturn(data);
+        lenient().when(mapper.map(domain, UsuarioEntidad.class)).thenReturn(data);
         when(repository.save(data)).thenReturn(Mono.just(data));
         lenient().when(mapper.map(data, Usuario.class)).thenReturn(domain);
 
@@ -117,7 +117,7 @@ class UsuarioRepositoryAdapterTest {
 
     @Test
     void debeVerificarExistenciaPorCorreoElectronico() {
-        UserData data = sampleData();
+        UsuarioEntidad data = sampleData();
 
         when(repository.findByCorreoElectronico("juan@example.com")).thenReturn(Mono.just(data));
 
@@ -130,7 +130,7 @@ class UsuarioRepositoryAdapterTest {
 
     @Test
     void debeBuscarUsuarioPorDocumentoIdentidad() {
-        UserData data = sampleData();
+        UsuarioEntidad data = sampleData();
         Usuario domain = sampleDomain();
 
         when(repository.findByDocumentoIdentidad("123456")).thenReturn(Mono.just(data));

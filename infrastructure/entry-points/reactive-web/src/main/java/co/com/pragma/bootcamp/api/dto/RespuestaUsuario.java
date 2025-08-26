@@ -1,21 +1,11 @@
-package co.com.pragma.bootcamp.r2dbc.entity;
+package co.com.pragma.bootcamp.api.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@Table("usuario")
-public class UserData {
-    @Id
+public class RespuestaUsuario {
     private String id;
     private String documentoIdentidad;
     private String nombres;

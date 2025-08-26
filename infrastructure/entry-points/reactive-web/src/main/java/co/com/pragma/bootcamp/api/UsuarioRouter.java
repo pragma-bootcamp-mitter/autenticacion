@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.server.ServerResponse;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
@@ -11,14 +12,14 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Configuration
-public class UserRouter {
+public class UsuarioRouter {
 
-    private static final String BASE_PATH = "/api/v1/usuarios";
+    private static final String RUTA_BASE  = "/api/v1/usuarios";
 
     @Bean
-    public RouterFunction<?> userRoutes(UserHandler handler) {
-        return route(POST(BASE_PATH).and(accept(MediaType.APPLICATION_JSON)), handler::registrarUsuario)
-                .andRoute(GET(BASE_PATH), handler::listarUsuarios)
-                .andRoute(GET(BASE_PATH + "/{documento}"), handler::obtenerUsuarioPorDocumento);
+    public RouterFunction<ServerResponse> userRoutes(UsuarioHandler handler) {
+        return route(POST(RUTA_BASE).and(accept(MediaType.APPLICATION_JSON)), handler::registrarUsuario)
+                .andRoute(GET(RUTA_BASE), handler::listarUsuarios)
+                .andRoute(GET(RUTA_BASE + "/{documento}"), handler::obtenerUsuarioPorDocumento);
     }
 }

@@ -1,7 +1,5 @@
 package co.com.pragma.bootcamp.api.dto;
 
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
-public class UserRequest {
+public class SolicitudUsuario  {
 
     @NotBlank(message = "El documento de identidad es obligatorio")
     private String documentoIdentidad;
