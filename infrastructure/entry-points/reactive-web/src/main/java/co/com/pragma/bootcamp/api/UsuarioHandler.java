@@ -4,8 +4,11 @@ import co.com.pragma.bootcamp.api.dto.RespuestaApi;
 import co.com.pragma.bootcamp.api.dto.SolicitudUsuario;
 import co.com.pragma.bootcamp.api.mapper.MapeadorUsuarioDto;
 import co.com.pragma.bootcamp.usecase.user.UsuarioCasoDeUso;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -14,6 +17,8 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import reactor.core.publisher.Mono;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -22,23 +27,36 @@ public class UsuarioHandler {
 
     private final UsuarioCasoDeUso usuarioCasoDeUso;
     private final MapeadorUsuarioDto mapeadorUsuarioDto;
+    private final Validator validator;
 
     public Mono<ServerResponse> registrarUsuario(ServerRequest request) {
         return request.bodyToMono(SolicitudUsuario.class)
-                .map(mapeadorUsuarioDto::aDominio)
-                .flatMap(usuarioCasoDeUso::registrarUsuario)
-                .map(mapeadorUsuarioDto::aRespuesta)
-                .flatMap(response -> ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(new RespuestaApi<>(true, "Usuario creado exitosamente", response))
-                )
+                .flatMap(solicitud -> {
+                    Set<ConstraintViolation<SolicitudUsuario>> violations = validator.validate(solicitud);
+                    if (!violations.isEmpty()) {
+                        Map<String, String> errores = violations.stream()
+                                .collect(Collectors.toMap(
+                                        v -> v.getPropertyPath().toString(),
+                                        ConstraintViolation::getMessage
+                                ));
+                        return ServerResponse.badRequest()
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(Map.of("errores", errores));
+                    }
+
+                    return usuarioCasoDeUso.registrarUsuario(mapeadorUsuarioDto.aDominio(solicitud))
+                            .map(mapeadorUsuarioDto::aRespuesta)
+                            .flatMap(response -> ServerResponse.ok()
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .bodyValue(new RespuestaApi<>(true, "Usuario creado exitosamente", response))
+                            );
+                })
                 .onErrorResume(BusinessException.class, e ->
                         ServerResponse.status(HttpStatus.CONFLICT)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(Map.of("error", e.getMessage()))
                 );
     }
-
 
     public Mono<ServerResponse> listarUsuarios(ServerRequest request) {
         return usuarioCasoDeUso.listarUsuarios()

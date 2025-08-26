@@ -1,6 +1,5 @@
 package co.com.pragma.bootcamp.api;
 
-
 import co.com.pragma.bootcamp.api.dto.RespuestaUsuario;
 import co.com.pragma.bootcamp.api.dto.SolicitudUsuario;
 import co.com.pragma.bootcamp.api.mapper.MapeadorUsuarioDto;
@@ -10,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -18,12 +18,14 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.Objects;
+import jakarta.validation.Validator;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class UsuarioHandlerTest {
+class UsuarioHandlerTest {
 
     @InjectMocks
     private UsuarioHandler usuarioHandler;
@@ -36,6 +38,9 @@ public class UsuarioHandlerTest {
 
     @Mock
     private ServerRequest serverRequest;
+
+    @Mock
+    private Validator validator;
 
     private Usuario usuario;
     private SolicitudUsuario solicitudUsuario;
@@ -77,6 +82,10 @@ public class UsuarioHandlerTest {
         respuestaUsuario.setTelefono("3001234567");
         respuestaUsuario.setCorreoElectronico("juan@test.com");
         respuestaUsuario.setSalarioBase(BigDecimal.valueOf(1000));
+
+        validator = Mockito.mock(Validator.class);
+        when(validator.validate(solicitudUsuario)).thenReturn(Collections.emptySet());
+        usuarioHandler = new UsuarioHandler(usuarioCasoDeUso, mapeadorUsuarioDto, validator);
     }
 
 

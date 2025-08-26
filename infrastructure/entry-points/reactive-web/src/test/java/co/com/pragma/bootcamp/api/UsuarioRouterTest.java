@@ -4,6 +4,7 @@ import co.com.pragma.bootcamp.api.dto.RespuestaUsuario;
 import co.com.pragma.bootcamp.api.mapper.MapeadorUsuarioDto;
 import co.com.pragma.bootcamp.model.user.Usuario;
 import co.com.pragma.bootcamp.usecase.user.UsuarioCasoDeUso;
+import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,6 +36,9 @@ class UsuarioRouterTest {
 
     @MockitoBean
     private MapeadorUsuarioDto mapeadorUsuarioDto;
+
+    @MockitoBean
+    private Validator validator;
 
     private Usuario expectedUsuario;
 
@@ -68,6 +73,8 @@ class UsuarioRouterTest {
                     response.setSalarioBase(u.getSalarioBase());
                     return response;
                 });
+
+        when(validator.validate(any())).thenReturn(Collections.emptySet());
     }
 
     @Test
