@@ -3,7 +3,7 @@ package co.com.pragma.bootcamp.api.config;
 import co.com.pragma.bootcamp.api.UserHandler;
 import co.com.pragma.bootcamp.api.UserRouter;
 import co.com.pragma.bootcamp.api.mapper.UserDtoMapperImpl;
-import co.com.pragma.bootcamp.model.user.User;
+import co.com.pragma.bootcamp.model.user.Usuario;
 import co.com.pragma.bootcamp.usecase.user.UserUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,11 +33,11 @@ class ConfigTest {
     @MockitoBean
     private UserUseCase userUseCase;
 
-    private User sampleUser;
+    private Usuario sampleUsuario;
 
     @BeforeEach
     void setup() {
-        sampleUser = User.builder()
+        sampleUsuario = Usuario.builder()
                 .id("12345")
                 .nombres("John")
                 .apellidos("Doe")
@@ -45,21 +45,21 @@ class ConfigTest {
                 .salarioBase(new BigDecimal("50000.00"))
                 .build();
 
-        when(userUseCase.registrarUsuario(any(User.class)))
-                .thenReturn(Mono.just(sampleUser));
+        when(userUseCase.registrarUsuario(any(Usuario.class)))
+                .thenReturn(Mono.just(sampleUsuario));
 
         when(userUseCase.listarUsuarios())
-                .thenReturn(Flux.fromIterable(List.of(sampleUser)));
+                .thenReturn(Flux.fromIterable(List.of(sampleUsuario)));
 
         when(userUseCase.obtenerUsuarioPorDocumento("12345"))
-                .thenReturn(Mono.just(sampleUser));
+                .thenReturn(Mono.just(sampleUsuario));
     }
 
     @Test
     void corsAndSecurityHeadersShouldBeApplied() {
         webTestClient.post()
                 .uri("/api/v1/usuarios")
-                .bodyValue(User.builder().build())
+                .bodyValue(Usuario.builder().build())
                 .exchange()
                 .expectStatus().isOk()
                 // Security headers

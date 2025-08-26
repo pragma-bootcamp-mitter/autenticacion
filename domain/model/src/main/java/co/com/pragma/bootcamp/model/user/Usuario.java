@@ -10,7 +10,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-public class User {
+public class Usuario {
     private String id;
     private String documentoIdentidad;
     private String nombres;

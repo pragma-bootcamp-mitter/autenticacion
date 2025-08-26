@@ -2,9 +2,8 @@ package co.com.pragma.bootcamp.api;
 
 import co.com.pragma.bootcamp.api.dto.UserResponse;
 import co.com.pragma.bootcamp.api.mapper.UserDtoMapper;
-import co.com.pragma.bootcamp.model.user.User;
+import co.com.pragma.bootcamp.model.user.Usuario;
 import co.com.pragma.bootcamp.usecase.user.UserUseCase;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +24,7 @@ import static org.mockito.Mockito.when;
 
 @ContextConfiguration(classes = {UserRouter.class, UserHandler.class})
 @WebFluxTest
-class UserRouterTest {
+class UsuarioRouterTest {
 
     @Autowired
     private WebTestClient webTestClient;
@@ -36,11 +35,11 @@ class UserRouterTest {
     @MockitoBean
     private UserDtoMapper userDtoMapper;
 
-    private User expectedUser;
+    private Usuario expectedUsuario;
 
     @BeforeEach
     void setup() {
-        expectedUser = new User(
+        expectedUsuario = new Usuario(
                 "12345",
                 "12345",
                 "John",
@@ -53,14 +52,14 @@ class UserRouterTest {
         );
 
         when(userDtoMapper.toDomain(any()))
-                .thenReturn(expectedUser);
+                .thenReturn(expectedUsuario);
 
-        when(userUseCase.registrarUsuario(any(User.class)))
-                .thenReturn(Mono.just(expectedUser));
+        when(userUseCase.registrarUsuario(any(Usuario.class)))
+                .thenReturn(Mono.just(expectedUsuario));
 
-        when(userDtoMapper.toResponse(any(User.class)))
+        when(userDtoMapper.toResponse(any(Usuario.class)))
                 .thenAnswer(invocation -> {
-                    User u = invocation.getArgument(0);
+                    Usuario u = invocation.getArgument(0);
                     UserResponse response = new UserResponse();
                     response.setId(u.getId());
                     response.setNombres(u.getNombres());
@@ -72,7 +71,7 @@ class UserRouterTest {
     }
 
     @Test
-    void testListenPOSTUseCase() {
+    void registrarUsuario_debeRetornarUsuarioCreado() {
         Map<String, Object> body = new HashMap<>();
         body.put("nombres", "John");
         body.put("apellidos", "Doe");
@@ -86,50 +85,48 @@ class UserRouterTest {
                 .bodyValue(body)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(UserResponse.class)
-                .value(userResponse -> {
-                    Assertions.assertThat(userResponse.getId()).isEqualTo("12345");
-                    Assertions.assertThat(userResponse.getNombres()).isEqualTo("John");
-                });
+                .expectBody()
+                .jsonPath("$.success").isEqualTo(true)
+                .jsonPath("$.message").isEqualTo("Usuario creado exitosamente")
+                .jsonPath("$.data.id").isEqualTo("12345")
+                .jsonPath("$.data.nombres").isEqualTo("John");
     }
 
-
     @Test
-    void testListenGETAllUsers() {
-        when(userUseCase.listarUsuarios()).thenReturn(Flux.just(expectedUser));
+    void listarUsuarios_debeRetornarListaDeUsuarios() {
+        when(userUseCase.listarUsuarios()).thenReturn(Flux.just(expectedUsuario));
 
         webTestClient.get()
                 .uri("/api/v1/usuarios")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBodyList(UserResponse.class)
-                .hasSize(1)
-                .value(users -> {
-                    Assertions.assertThat(users.get(0).getId()).isEqualTo("12345");
-                    Assertions.assertThat(users.get(0).getNombres()).isEqualTo("John");
-                });
+                .expectBody()
+                .jsonPath("$.success").isEqualTo(true)
+                .jsonPath("$.message").isEqualTo("Usuarios obtenidos correctamente")
+                .jsonPath("$.data[0].id").isEqualTo("12345")
+                .jsonPath("$.data[0].nombres").isEqualTo("John");
     }
 
     @Test
-    void testListenGETUserByDocumento() {
+    void obtenerUsuarioPorDocumento_debeRetornarUsuarioCuandoExiste() {
         String documento = "12345";
-        when(userUseCase.obtenerUsuarioPorDocumento(documento)).thenReturn(Mono.just(expectedUser));
+        when(userUseCase.obtenerUsuarioPorDocumento(documento)).thenReturn(Mono.just(expectedUsuario));
 
         webTestClient.get()
                 .uri("/api/v1/usuarios/{documento}", documento)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(UserResponse.class)
-                .value(userResponse -> {
-                    Assertions.assertThat(userResponse.getId()).isEqualTo("12345");
-                    Assertions.assertThat(userResponse.getNombres()).isEqualTo("John");
-                });
+                .expectBody()
+                .jsonPath("$.success").isEqualTo(true)
+                .jsonPath("$.message").isEqualTo("Usuario encontrado")
+                .jsonPath("$.data.id").isEqualTo("12345")
+                .jsonPath("$.data.nombres").isEqualTo("John");
     }
 
     @Test
-    void testListenGETUserByDocumentoNotFound() {
+    void obtenerUsuarioPorDocumento_debeRetornarNotFoundCuandoNoExiste() {
         String documento = "99999";
         when(userUseCase.obtenerUsuarioPorDocumento(documento)).thenReturn(Mono.empty());
 

@@ -18,7 +18,7 @@ public class UserRouter {
     @Bean
     public RouterFunction<?> userRoutes(UserHandler handler) {
         return route(POST(BASE_PATH).and(accept(MediaType.APPLICATION_JSON)), handler::registrarUsuario)
-                .andRoute(GET(BASE_PATH).and(accept(MediaType.APPLICATION_JSON)), handler::listarUsuarios)
-                .andRoute(GET(BASE_PATH + "/{documento}").and(accept(MediaType.APPLICATION_JSON)), handler::obtenerUsuarioPorDocumento);
+                .andRoute(GET(BASE_PATH), handler::listarUsuarios)
+                .andRoute(GET(BASE_PATH + "/{documento}"), handler::obtenerUsuarioPorDocumento);
     }
 }
