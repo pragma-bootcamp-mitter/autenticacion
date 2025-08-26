@@ -1,5 +1,7 @@
 package co.com.pragma.bootcamp.api.dto;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -33,5 +35,7 @@ public class SolicitudUsuario  {
     private String correoElectronico;
 
     @NotNull(message = "El salario base es obligatorio")
+    @DecimalMin(value = "0.0", inclusive = true, message = "El salario base no puede ser negativo")
+    @DecimalMax(value = "15000000.0", message = "El salario base no puede superar 15 millones")
     private BigDecimal salarioBase;
 }
