@@ -1,5 +1,6 @@
 package co.com.pragma.bootcamp.api.config;
 
+import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,7 +17,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private static final String ERROR = "error";
-    private static final String MESSAGE = "message";
+    private static final String MESSAGE = "mensaje";
 
     @ExceptionHandler(ServerWebInputException.class)
     public Mono<ResponseEntity<Map<String, Object>>> handleValidationErrors(ServerWebInputException ex) {
@@ -55,4 +56,19 @@ public class GlobalExceptionHandler {
                         ))
         );
     }
+
+    @ExceptionHandler(BusinessException.class)
+    public Mono<ResponseEntity<Map<String, Object>>> handleBusiness(BusinessException ex) {
+        log.error("Error de negocio: {}", ex.getMessage());
+
+        return Mono.just(
+                ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(Map.of(
+                                ERROR, "Error de negocio",
+                                MESSAGE, ex.getMessage()
+                        ))
+        );
+    }
+
 }

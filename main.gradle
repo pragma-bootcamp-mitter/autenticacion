@@ -101,6 +101,7 @@ tasks.register('jacocoRootReport', JacocoReport) {
         fileTree(dir: "${sub.buildDir}/classes/java/main", exclude: [
                 '**/mapper/**',
                 '**/config/**',
+                '**/exceptions/**',
                 '**/MainApplication.class'
         ])
     })
