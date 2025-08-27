@@ -47,7 +47,7 @@ class UserUseCaseTest {
     }
 
     @Test
-    void registerUserCuandoEsValido() {
+    void registerUser_shouldSucceedWhenUserIsValid() {
         when(userRepository.findByIdentificationDocument(validUser.getIdentificationDocument()))
                 .thenReturn(Mono.empty());
         when(userRepository.existsByEmail(validUser.getEmail()))
@@ -63,7 +63,7 @@ class UserUseCaseTest {
     }
 
     @Test
-    void registerUser_debeFallarCuandoCorreoYaExiste() {
+    void registerUser_shouldFailWhenEmailAlreadyExists() {
         when(userRepository.findByIdentificationDocument(validUser.getIdentificationDocument()))
                 .thenReturn(Mono.empty());
         when(userRepository.existsByEmail(validUser.getEmail()))
@@ -80,7 +80,7 @@ class UserUseCaseTest {
     }
 
     @Test
-    void registerUser_debeFallarCuandoDocumentoYaExiste() {
+    void registerUser_shouldFailWhenDocumentAlreadyExists() {
         when(userRepository.findByIdentificationDocument(validUser.getIdentificationDocument()))
                 .thenReturn(Mono.just(validUser));
 
@@ -98,7 +98,7 @@ class UserUseCaseTest {
     }
 
     @Test
-    void listUsersCuandoExisten() {
+    void listUsers_shouldReturnUsersWhenTheyExist() {
         when(userRepository.findAll()).thenReturn(Flux.just(validUser));
 
         StepVerifier.create(userUseCase.listUsers())
@@ -119,7 +119,7 @@ class UserUseCaseTest {
     }
 
     @Test
-    void obtenerUsuarioPorDocumento_debeRetornarUsuarioCuandoExiste() {
+    void getUserByDocument_shouldReturnUserWhenExists() {
         when(userRepository.findByIdentificationDocument("12345"))
                 .thenReturn(Mono.just(validUser));
 
@@ -131,7 +131,7 @@ class UserUseCaseTest {
     }
 
     @Test
-    void getUserByDocument_debeFallarCuandoNoExiste() {
+    void getUserByDocument_shouldFailWhenUserDoesNotExist() {
         when(userRepository.findByIdentificationDocument("12345"))
                 .thenReturn(Mono.empty());
 

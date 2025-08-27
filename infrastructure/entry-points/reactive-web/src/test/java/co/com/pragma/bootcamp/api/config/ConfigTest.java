@@ -82,9 +82,9 @@ class ConfigTest {
     }
 
     @Test
-    void corsYEncabezadosDeSeguridadSeAplicanEnPost() {
+    void corsAndSecurityHeadersAreAppliedOnPost() {
         webTestClient.post()
-                .uri("/api/v1/usuarios")
+                .uri("/api/v1/users")
                 .bodyValue(User.builder().build())
                 .exchange()
                 .expectStatus().isOk()
@@ -101,9 +101,9 @@ class ConfigTest {
 
 
     @Test
-    void corsYEncabezadosDeSeguridadSeAplicanEnGetTodos() {
+    void corsAndSecurityHeadersAreAppliedOnGetAll() {
         webTestClient.get()
-                .uri("/api/v1/usuarios")
+                .uri("/api/v1/users")
                 .exchange()
                 .expectStatus().isOk()
                 // Security headers
@@ -118,9 +118,9 @@ class ConfigTest {
     }
 
     @Test
-    void corsYEncabezadosDeSeguridadSeAplicanEnGetPorDocumento() {
+    void corsAndSecurityHeadersAreAppliedOnGetByDocument() {
         webTestClient.get()
-                .uri("/api/v1/usuarios/12345")
+                .uri("/api/v1/users/12345")
                 .exchange()
                 .expectStatus().isOk()
                 // Security headers

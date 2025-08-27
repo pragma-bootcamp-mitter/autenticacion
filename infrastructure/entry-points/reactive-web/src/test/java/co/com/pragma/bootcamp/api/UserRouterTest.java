@@ -132,7 +132,7 @@ class UserRouterTest {
     }
 
     @Test
-    void obtenerUsuarioPorDocumento_debeRetornarNotFoundCuandoNoExiste() {
+    void getUserByDocument_shouldReturnNotFoundWhenDoesNotExist() {
         String documento = "99999";
         when(userUseCase.getUserByDocument(documento)).thenReturn(Mono.empty());
 
