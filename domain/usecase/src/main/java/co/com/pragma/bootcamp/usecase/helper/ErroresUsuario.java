@@ -7,7 +7,8 @@ public enum ErroresUsuario {
     CORREO_YA_REGISTRADO("El correo ya está registrado"),
     USUARIO_NO_ENCONTRADO("Usuario no encontrado"),
     SALARIO_NEGATIVO("El salario base no puede ser negativo"),
-    SALARIO_SUPERA_MAXIMO("El salario base no puede superar ")
+    SALARIO_SUPERA_MAXIMO("El salario base no puede superar "),
+    DOCUMENTO_YA_REGISTRADO("Ese documento de identidad ya está registrado")
     ;
 
     private final String mensaje;

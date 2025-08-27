@@ -8,7 +8,6 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -41,20 +40,19 @@ public class UsuarioHandler {
                                 ));
                         return ServerResponse.badRequest()
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(Map.of("errores", errores));
+                                .bodyValue(RespuestaApi.error("Error de validación", errores));
                     }
-
                     return usuarioCasoDeUso.registrarUsuario(mapeadorUsuarioDto.aDominio(solicitud))
                             .map(mapeadorUsuarioDto::aRespuesta)
                             .flatMap(response -> ServerResponse.ok()
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .bodyValue(new RespuestaApi<>(true, "Usuario creado exitosamente", response))
+                                    .bodyValue(RespuestaApi.ok("Usuario creado exitosamente", response))
                             );
                 })
                 .onErrorResume(BusinessException.class, e ->
                         ServerResponse.status(HttpStatus.CONFLICT)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(Map.of("error", e.getMessage()))
+                                .bodyValue(RespuestaApi.error(e.getMessage()))
                 );
     }
 
@@ -64,7 +62,7 @@ public class UsuarioHandler {
                 .collectList()
                 .flatMap(users -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(new RespuestaApi<>(true, "Usuarios obtenidos correctamente", users))
+                        .bodyValue(RespuestaApi.ok("Usuarios obtenidos correctamente", users))
                 );
     }
 
@@ -77,7 +75,7 @@ public class UsuarioHandler {
                 .doOnNext(user -> log.info("Usuario encontrado: {}", user))
                 .flatMap(user -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(new RespuestaApi<>(true, "Usuario encontrado", user))
+                        .bodyValue(RespuestaApi.ok("Usuario encontrado", user))
                 )
                 .switchIfEmpty(
                         ServerResponse.status(HttpStatus.NOT_FOUND)

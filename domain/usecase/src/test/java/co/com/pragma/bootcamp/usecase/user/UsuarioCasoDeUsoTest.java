@@ -16,6 +16,7 @@ import reactor.test.StepVerifier;
 import java.math.BigDecimal;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -45,6 +46,8 @@ class UsuarioCasoDeUsoTest {
 
     @Test
     void registrarUsuario_debeGuardarUsuarioCuandoEsValido() {
+        when(repositorioUsuario.buscarPorDocumentoIdentidad(validUsuario.getDocumentoIdentidad()))
+                .thenReturn(Mono.empty());
         when(repositorioUsuario.existePorCorreoElectronico(validUsuario.getCorreoElectronico()))
                 .thenReturn(Mono.just(false));
         when(repositorioUsuario.save(validUsuario))
@@ -59,6 +62,8 @@ class UsuarioCasoDeUsoTest {
 
     @Test
     void registrarUsuario_debeFallarCuandoCorreoYaExiste() {
+        when(repositorioUsuario.buscarPorDocumentoIdentidad(validUsuario.getDocumentoIdentidad()))
+                .thenReturn(Mono.empty());
         when(repositorioUsuario.existePorCorreoElectronico(validUsuario.getCorreoElectronico()))
                 .thenReturn(Mono.just(true));
 
@@ -66,6 +71,24 @@ class UsuarioCasoDeUsoTest {
                 .expectErrorSatisfies(error -> {
                     assert error instanceof BusinessException;
                     assert error.getMessage().equals(ErroresUsuario.CORREO_YA_REGISTRADO.getMensaje());
+                })
+                .verify();
+
+        verify(repositorioUsuario, never()).save(any());
+    }
+
+    @Test
+    void registrarUsuario_debeFallarCuandoDocumentoYaExiste() {
+        when(repositorioUsuario.buscarPorDocumentoIdentidad(validUsuario.getDocumentoIdentidad()))
+                .thenReturn(Mono.just(validUsuario));
+
+        when(repositorioUsuario.existePorCorreoElectronico(anyString()))
+                .thenReturn(Mono.just(false));
+
+        StepVerifier.create(usuarioCasoDeUso.registrarUsuario(validUsuario))
+                .expectErrorSatisfies(error -> {
+                    assert error instanceof BusinessException;
+                    assert error.getMessage().equals(ErroresUsuario.DOCUMENTO_YA_REGISTRADO.getMensaje());
                 })
                 .verify();
 

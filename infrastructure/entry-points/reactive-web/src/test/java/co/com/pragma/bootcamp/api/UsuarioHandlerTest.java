@@ -3,8 +3,11 @@ package co.com.pragma.bootcamp.api;
 import co.com.pragma.bootcamp.api.dto.RespuestaUsuario;
 import co.com.pragma.bootcamp.api.dto.SolicitudUsuario;
 import co.com.pragma.bootcamp.api.mapper.MapeadorUsuarioDto;
+import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import co.com.pragma.bootcamp.model.user.Usuario;
 import co.com.pragma.bootcamp.usecase.user.UsuarioCasoDeUso;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Path;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -20,8 +23,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Objects;
+import java.util.Set;
+
 import jakarta.validation.Validator;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -106,6 +113,29 @@ class UsuarioHandlerTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void registrarUsuario_errorDeValidacion() {
+        ConstraintViolation<SolicitudUsuario> violation = Mockito.mock(ConstraintViolation.class);
+        Path path = Mockito.mock(Path.class);
+        when(path.toString()).thenReturn("correoElectronico");
+        when(violation.getPropertyPath()).thenReturn(path);
+        when(violation.getMessage()).thenReturn("Correo inválido");
+
+        when(serverRequest.bodyToMono(SolicitudUsuario.class)).thenReturn(Mono.just(solicitudUsuario));
+        when(validator.validate(solicitudUsuario)).thenReturn(Set.of(violation));
+
+        Mono<ServerResponse> responseMono = usuarioHandler.registrarUsuario(serverRequest);
+
+        StepVerifier.create(responseMono)
+                .assertNext(response -> {
+                    assert response.statusCode().is4xxClientError();
+                })
+                .verifyComplete();
+
+        verify(usuarioCasoDeUso, never()).registrarUsuario(any());
+    }
+
+    @Test
     void listarUsuarios_exito() {
         when(usuarioCasoDeUso.listarUsuarios()).thenReturn(Flux.just(usuario));
         when(mapeadorUsuarioDto.aRespuesta(usuario)).thenReturn(respuestaUsuario);
@@ -132,5 +162,24 @@ class UsuarioHandlerTest {
                 .verifyComplete();
 
         verify(usuarioCasoDeUso).obtenerUsuarioPorDocumento("12345");
+    }
+
+    @Test
+    void registrarUsuario_errorBusinessException() {
+        when(serverRequest.bodyToMono(SolicitudUsuario.class)).thenReturn(Mono.just(solicitudUsuario));
+        when(validator.validate(solicitudUsuario)).thenReturn(Collections.emptySet());
+        when(mapeadorUsuarioDto.aDominio(solicitudUsuario)).thenReturn(usuario);
+
+        when(usuarioCasoDeUso.registrarUsuario(usuario))
+                .thenReturn(Mono.error(new BusinessException("Documento ya registrado")));
+
+        Mono<ServerResponse> responseMono = usuarioHandler.registrarUsuario(serverRequest);
+
+        StepVerifier.create(responseMono)
+                .assertNext(response -> {
+                    assert response.statusCode().is4xxClientError();
+                    assert response.statusCode().value() == 409; // CONFLICT
+                })
+                .verifyComplete();
     }
 }
