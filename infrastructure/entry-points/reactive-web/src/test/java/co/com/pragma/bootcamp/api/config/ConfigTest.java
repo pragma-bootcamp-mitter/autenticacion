@@ -1,12 +1,12 @@
 package co.com.pragma.bootcamp.api.config;
 
-import co.com.pragma.bootcamp.api.UsuarioHandler;
-import co.com.pragma.bootcamp.api.UsuarioRouter;
-import co.com.pragma.bootcamp.api.dto.RespuestaUsuario;
-import co.com.pragma.bootcamp.api.dto.SolicitudUsuario;
-import co.com.pragma.bootcamp.api.mapper.MapeadorUsuarioDto;
-import co.com.pragma.bootcamp.model.user.Usuario;
-import co.com.pragma.bootcamp.usecase.user.UsuarioCasoDeUso;
+import co.com.pragma.bootcamp.api.Handler;
+import co.com.pragma.bootcamp.api.UserRouter;
+import co.com.pragma.bootcamp.api.dto.UserRequest;
+import co.com.pragma.bootcamp.api.dto.UserResponse;
+import co.com.pragma.bootcamp.api.mapper.UserMapper;
+import co.com.pragma.bootcamp.model.user.User;
+import co.com.pragma.bootcamp.usecase.user.UserUseCase;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {UsuarioRouter.class, UsuarioHandler.class})
+@ContextConfiguration(classes = {UserRouter.class, Handler.class})
 @WebFluxTest
 @Import({CorsConfig.class, SecurityHeadersConfig.class})
 class ConfigTest {
@@ -35,47 +35,47 @@ class ConfigTest {
     private WebTestClient webTestClient;
 
     @MockitoBean
-    private UsuarioCasoDeUso usuarioCasoDeUso;
+    private UserUseCase userUseCase;
 
     @MockitoBean
-    private MapeadorUsuarioDto mapeadorUsuarioDto;
+    private UserMapper userMapper;
 
     @MockitoBean
     private Validator validator;
 
-    private Usuario sampleUsuario;
+    private User sampleUser;
 
     @BeforeEach
     void setup() {
-        sampleUsuario = Usuario.builder()
+        sampleUser = User.builder()
                 .id("12345")
-                .nombres("John")
-                .apellidos("Doe")
-                .fechaNacimiento(LocalDate.of(1990, 5, 15))
-                .salarioBase(new BigDecimal("50000.00"))
+                .firstName("John")
+                .lastName("Doe")
+                .dateOfBirth(LocalDate.of(1990, 5, 15))
+                .baseSalary(new BigDecimal("50000.00"))
                 .build();
 
-        when(usuarioCasoDeUso.registrarUsuario(any(Usuario.class)))
-                .thenReturn(Mono.just(sampleUsuario));
+        when(userUseCase.registerUser(any(User.class)))
+                .thenReturn(Mono.just(sampleUser));
 
-        when(usuarioCasoDeUso.listarUsuarios())
-                .thenReturn(Flux.fromIterable(List.of(sampleUsuario)));
+        when(userUseCase.listUsers())
+                .thenReturn(Flux.fromIterable(List.of(sampleUser)));
 
-        when(usuarioCasoDeUso.obtenerUsuarioPorDocumento("12345"))
-                .thenReturn(Mono.just(sampleUsuario));
+        when(userUseCase.getUserByDocument("12345"))
+                .thenReturn(Mono.just(sampleUser));
 
-        when(mapeadorUsuarioDto.aDominio(any(SolicitudUsuario.class)))
-                .thenAnswer(invocation -> sampleUsuario);
+        when(userMapper.toDomain(any(UserRequest.class)))
+                .thenAnswer(invocation -> sampleUser);
 
-        when(mapeadorUsuarioDto.aRespuesta(any(Usuario.class)))
+        when(userMapper.toResponse(any(User.class)))
                 .thenAnswer(invocation -> {
-                    Usuario u = invocation.getArgument(0);
-                    RespuestaUsuario resp = new RespuestaUsuario();
+                    User u = invocation.getArgument(0);
+                    UserResponse resp = new UserResponse();
                     resp.setId(u.getId());
-                    resp.setNombres(u.getNombres());
-                    resp.setApellidos(u.getApellidos());
-                    resp.setFechaNacimiento(u.getFechaNacimiento());
-                    resp.setSalarioBase(u.getSalarioBase());
+                    resp.setFirstName(u.getFirstName());
+                    resp.setLastName(u.getLastName());
+                    resp.setDateOfBirth(u.getDateOfBirth());
+                    resp.setBaseSalary(u.getBaseSalary());
                     return resp;
                 });
         when(validator.validate(any())).thenReturn(Collections.emptySet());
@@ -85,7 +85,7 @@ class ConfigTest {
     void corsYEncabezadosDeSeguridadSeAplicanEnPost() {
         webTestClient.post()
                 .uri("/api/v1/usuarios")
-                .bodyValue(Usuario.builder().build())
+                .bodyValue(User.builder().build())
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().valueEquals("Content-Security-Policy",

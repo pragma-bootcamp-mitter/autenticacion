@@ -1,7 +1,7 @@
 package co.com.pragma.bootcamp.config;
 
-import co.com.pragma.bootcamp.model.user.gateways.RepositorioUsuario;
-import co.com.pragma.bootcamp.usecase.user.UsuarioCasoDeUso;
+import co.com.pragma.bootcamp.model.user.gateways.UserRepository;
+import co.com.pragma.bootcamp.usecase.user.UserUseCase;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -19,13 +19,13 @@ public class UseCasesConfigTest {
 
             boolean useCaseBeanFound = false;
             for (String beanName : beanNames) {
-                if (beanName.endsWith("CasoDeUso")) {
+                if (beanName.endsWith("UseCase")) {
                     useCaseBeanFound = true;
                     break;
                 }
             }
 
-            assertTrue(useCaseBeanFound, "No beans ending with 'CasoDeUso' were found");
+            assertTrue(useCaseBeanFound, "No beans ending with 'UseCase' were found");
         }
     }
 
@@ -34,22 +34,22 @@ public class UseCasesConfigTest {
     static class TestConfig {
 
         @Mock
-        private RepositorioUsuario repositorioUsuario;
+        private UserRepository userRepository;
 
         @Bean
-        public MiCasoDeUso miCasoDeUso() {
-            return new MiCasoDeUso();
+        public MyUseCase myUseCase() {
+            return new MyUseCase();
         }
 
         @Bean
-        public UsuarioCasoDeUso usuarioCasoDeUso() {
-            return new UsuarioCasoDeUso(repositorioUsuario);
+        public UserUseCase userUseCase() {
+            return new UserUseCase(userRepository);
         }
     }
 
-    static class MiCasoDeUso {
+    static class MyUseCase {
         public String execute() {
-            return "MiCasoDeUso Test";
+            return "UseCase Test";
         }
     }
 }

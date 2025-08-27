@@ -1,8 +1,8 @@
 package co.com.pragma.bootcamp.api.config;
 
-import co.com.pragma.bootcamp.api.UsuarioHandler;
-import co.com.pragma.bootcamp.api.dto.SolicitudUsuario;
-import co.com.pragma.bootcamp.api.dto.RespuestaUsuario;
+import co.com.pragma.bootcamp.api.Handler;
+import co.com.pragma.bootcamp.api.dto.UserRequest;
+import co.com.pragma.bootcamp.api.dto.UserResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -29,11 +29,11 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Autenticación API")
+                        .title("Authentication API")
                         .version("1.0.0")
-                        .description("API para registrar usuarios en el sistema")
+                        .description("API for registering users in the system")
                         .contact(new Contact()
-                                .name("Equipo Bootcamp")
+                                .name("Bootcamp Team")
                                 .email("soporte@pragma.com")
                         )
                 );
@@ -42,73 +42,75 @@ public class OpenApiConfig {
     @Bean
     @RouterOperations({
             @RouterOperation(
-                    path = "/api/v1/usuarios",
+                    path = "/api/v1/users",
                     produces = { "application/json" },
                     method = RequestMethod.POST,
-                    beanClass = UsuarioHandler.class,
-                    beanMethod = "registrarUsuario",
+                    beanClass = Handler.class,
+                    beanMethod = "registerUser",
                     operation = @Operation(
-                            operationId = "registrarUsuario",
-                            summary = "Registrar un nuevo usuario",
-                            description = "Crea un usuario en el sistema con datos personales básicos",
-                            tags = {"Usuarios"},
+                            operationId = "registerUser",
+                            summary = "Register a new user",
+                            description = "Creates a user in the system with basic personal data",
+                            tags = {"Users"},
                             requestBody = @RequestBody(
                                     required = true,
-                                    content = @Content(schema = @Schema(implementation = SolicitudUsuario.class))
+                                    content = @Content(schema = @Schema(implementation = UserRequest.class))
                             ),
                             responses = {
-                                    @ApiResponse(responseCode = "200", description = "Usuario creado",
-                                            content = @Content(schema = @Schema(implementation = RespuestaUsuario.class))),
-                                    @ApiResponse(responseCode = "409", description = "Correo ya registrado")
+                                    @ApiResponse(responseCode = "200", description = "User created",
+                                            content = @Content(schema = @Schema(implementation = UserResponse.class))),
+                                    @ApiResponse(responseCode = "409", description = "Email already registered")
                             }
                     )
             ),
             @RouterOperation(
-                    path = "/api/v1/usuarios",
+                    path = "/api/v1/users",
                     produces = { "application/json" },
                     method = RequestMethod.GET,
-                    beanClass = UsuarioHandler.class,
-                    beanMethod = "listarUsuarios",
+                    beanClass = Handler.class,
+                    beanMethod = "listUsers",
                     operation = @Operation(
-                            operationId = "listarUsuarios",
-                            summary = "Listar todos los usuarios",
-                            tags = {"Usuarios"},
+                            operationId = "listUsers",
+                            summary = "List all users",
+                            tags = {"Users"},
                             responses = {
-                                    @ApiResponse(responseCode = "200", description = "Listado de usuarios",
-                                            content = @Content(schema = @Schema(implementation = RespuestaUsuario.class)))
+                                    @ApiResponse(responseCode = "200", description = "List of users",
+                                            content = @Content(schema = @Schema(implementation = UserResponse.class)))
                             }
                     )
             ),
             @RouterOperation(
-                    path = "/api/v1/usuarios/{documento}",
+                    path = "/api/v1/users/{document}",
                     produces = {"application/json"},
                     method = RequestMethod.GET,
-                    beanClass = UsuarioHandler.class,
-                    beanMethod = "obtenerUsuarioPorDocumento",
+                    beanClass = Handler.class,
+                    beanMethod = "getUserByDocument",
                     operation = @Operation(
-                            operationId = "obtenerUsuarioPorDocumento",
-                            summary = "Obtener usuario por documento de identidad",
-                            tags = {"Usuarios"},
+                            operationId = "getUserByDocument",
+                            summary = "Get user by identification document",
+                            tags = {"Users"},
                             parameters = {
                                     @Parameter(
-                                            name = "documento",
+                                            name = "document",
                                             in = ParameterIn.PATH,
                                             required = true,
-                                            description = "Número de documento",
+                                            description = "Document number",
                                             example = "123456789"
                                     )
                             },
                             responses = {
-                                    @ApiResponse(responseCode = "200", description = "Usuario encontrado",
-                                            content = @Content(schema = @Schema(implementation = RespuestaUsuario.class))),
-                                    @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+                                    @ApiResponse(responseCode = "200", description = "User found",
+                                            content = @Content(schema = @Schema(implementation = UserResponse.class))),
+                                    @ApiResponse(responseCode = "404", description = "User not found")
                             }
                     )
             )
     })
-    public RouterFunction<ServerResponse> router(UsuarioHandler handler) {
+    public RouterFunction<ServerResponse> router(Handler handler) {
         return RouterFunctions.route()
-                .POST("/api/v1/usuarios", handler::registrarUsuario)
+                .POST("/api/v1/users", handler::registerUser)
+                .GET("/api/v1/users", handler::listUsers)
+                .GET("/api/v1/users/{document}", handler::getUserByDocument)
                 .build();
     }
 }

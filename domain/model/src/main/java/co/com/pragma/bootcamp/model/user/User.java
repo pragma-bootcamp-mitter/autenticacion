@@ -10,14 +10,14 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-public class Usuario {
+public class User {
     private String id;
-    private String documentoIdentidad;
-    private String nombres;
-    private String apellidos;
-    private LocalDate fechaNacimiento;
-    private String direccion;
-    private String telefono;
-    private String correoElectronico;
-    private BigDecimal salarioBase;
+    private String identificationDocument;
+    private String firstName;
+    private String lastName;
+    private LocalDate dateOfBirth;
+    private String address;
+    private String phoneNumber;
+    private String email;
+    private BigDecimal baseSalary;
 }
