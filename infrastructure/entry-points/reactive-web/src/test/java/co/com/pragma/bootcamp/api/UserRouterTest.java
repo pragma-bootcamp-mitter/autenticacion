@@ -86,7 +86,7 @@ class UserRouterTest {
         body.put("baseSalary", new BigDecimal("50000.00"));
 
         webTestClient.post()
-                .uri("/api/v1/usuarios")
+                .uri("/api/v1/users")
                 .contentType(APPLICATION_JSON)
                 .accept(APPLICATION_JSON)
                 .bodyValue(body)
@@ -103,7 +103,7 @@ class UserRouterTest {
         when(userUseCase.listUsers()).thenReturn(Flux.just(expectedUser));
 
         webTestClient.get()
-                .uri("/api/v1/usuarios")
+                .uri("/api/v1/users")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -120,7 +120,7 @@ class UserRouterTest {
         when(userUseCase.getUserByDocument(document)).thenReturn(Mono.just(expectedUser));
 
         webTestClient.get()
-                .uri("/api/v1/usuarios/{documento}", document)
+                .uri("/api/v1/users/{document}", document)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -137,7 +137,7 @@ class UserRouterTest {
         when(userUseCase.getUserByDocument(documento)).thenReturn(Mono.empty());
 
         webTestClient.get()
-                .uri("/api/v1/usuarios/{documento}", documento)
+                .uri("/api/v1/users/{document}", documento)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();

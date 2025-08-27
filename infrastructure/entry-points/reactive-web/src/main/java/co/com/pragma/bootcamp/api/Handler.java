@@ -76,7 +76,7 @@ public class Handler {
     }
 
     public Mono<ServerResponse> getUserByDocument(ServerRequest request) {
-        String document = request.pathVariable("documento");
+        String document = request.pathVariable("document");
         log.info("Request to get user with document: {}", document);
 
         return userUseCase.getUserByDocument(document)

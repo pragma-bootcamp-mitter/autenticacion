@@ -152,7 +152,7 @@ class HandlerTest {
 
     @Test
     void getUserByDocument_success() {
-        when(serverRequest.pathVariable("documento")).thenReturn("12345");
+        when(serverRequest.pathVariable("document")).thenReturn("12345");
         when(userUseCase.getUserByDocument("12345")).thenReturn(Mono.just(user));
         when(userMapper.toResponse(user)).thenReturn(userResponse);
 

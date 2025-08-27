@@ -14,12 +14,12 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 @Configuration
 public class UserRouter {
 
-    private static final String BASE_PATH   = "/api/v1/usuarios";
+    private static final String BASE_PATH   = "/api/v1/users";
 
     @Bean
     public RouterFunction<ServerResponse> userRoutes(Handler handler) {
         return route(POST(BASE_PATH ).and(accept(MediaType.APPLICATION_JSON)), handler::registerUser)
                 .andRoute(GET(BASE_PATH ), handler::listUsers)
-                .andRoute(GET(BASE_PATH  + "/{documento}"), handler::getUserByDocument);
+                .andRoute(GET(BASE_PATH  + "/{document}"), handler::getUserByDocument);
     }
 }
