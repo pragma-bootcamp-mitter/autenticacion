@@ -15,9 +15,6 @@ import reactor.test.StepVerifier;
 import java.math.BigDecimal;
 
 import static co.com.pragma.bootcamp.model.exceptions.UserErrors.DOCUMENT_OR_EMAIL_ALREADY_REGISTERED;
-import static co.com.pragma.bootcamp.usecase.helper.UserErrors.DOCUMENT_ALREADY_REGISTERED;
-import static co.com.pragma.bootcamp.usecase.helper.UserErrors.EMAIL_ALREADY_REGISTERED;
-import static co.com.pragma.bootcamp.usecase.helper.UserErrors.USER_NOT_FOUND;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;

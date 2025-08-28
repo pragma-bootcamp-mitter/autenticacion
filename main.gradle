@@ -102,7 +102,8 @@ tasks.register('jacocoRootReport', JacocoReport) {
                 '**/mapper/**',
                 '**/config/**',
                 '**/exceptions/**',
-                '**/MainApplication.class'
+                '**/MainApplication.class',
+                'co/com/pragma/bootcamp/model/exceptions/UserErrors.class'
         ])
     })
 

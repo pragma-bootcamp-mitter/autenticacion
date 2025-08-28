@@ -1,9 +1,11 @@
 package co.com.pragma.bootcamp.api;
 
+import co.com.pragma.bootcamp.api.config.GlobalExceptionHandler;
 import co.com.pragma.bootcamp.api.dto.UserRequest;
 import co.com.pragma.bootcamp.api.dto.UserResponse;
 import co.com.pragma.bootcamp.api.helper.ValidatorUtil;
 import co.com.pragma.bootcamp.api.mapper.UserMapper;
+import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import co.com.pragma.bootcamp.model.user.User;
 import co.com.pragma.bootcamp.usecase.user.UserUseCase;
 import jakarta.validation.Validator;
@@ -11,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -21,11 +24,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 
+import static co.com.pragma.bootcamp.model.exceptions.UserErrors.DOCUMENT_OR_EMAIL_ALREADY_REGISTERED;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @WebFluxTest
-@ContextConfiguration(classes = {UserRouter.class, UserHandler.class, ValidatorUtil.class})
+@ContextConfiguration(classes = {UserRouter.class, UserHandler.class, ValidatorUtil.class, GlobalExceptionHandler.class})
 class UserRouterTest {
 
     @Autowired
@@ -122,5 +126,40 @@ class UserRouterTest {
                 .jsonPath("$.title").isEqualTo("successfully")
                 .jsonPath("$.data[0].id").isEqualTo("12345")
                 .jsonPath("$.data[0].firstName").isEqualTo("John");
+    }
+
+
+
+    @Test
+    void registerUser_shouldReturnConflict_whenUserAlreadyExists() {
+        // Given
+        UserRequest userRequest = new UserRequest();
+        userRequest.setIdentificationDocument("12345");
+        userRequest.setFirstName("Juan");
+        userRequest.setLastName("Pérez");
+        userRequest.setDateOfBirth(LocalDate.of(1990, 1, 1));
+        userRequest.setAddress("Calle 123");
+        userRequest.setPhoneNumber("3001234567");
+        userRequest.setEmail("juan@test.com");
+        userRequest.setBaseSalary(BigDecimal.valueOf(1000));
+
+        when(userMapper.toDomain(any(UserRequest.class))).thenReturn(expectedUser);
+        when(userUseCase.registerUser(any(User.class)))
+                .thenReturn(Mono.error(new BusinessException(DOCUMENT_OR_EMAIL_ALREADY_REGISTERED)));
+
+        // When/Then
+        webTestClient.post()
+                .uri("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(userRequest)
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.CONFLICT)
+                .expectBody()
+                .jsonPath("$.code").isEqualTo("BR_409_CONFLICT")
+                .jsonPath("$.message").isEqualTo("The provided identification document or email address is already in use")
+                .jsonPath("$.title").isEqualTo("Conflict with existing data") // <-- Corrected
+                .jsonPath("$.data").doesNotExist()
+                .jsonPath("$.errors").doesNotExist();
     }
 }

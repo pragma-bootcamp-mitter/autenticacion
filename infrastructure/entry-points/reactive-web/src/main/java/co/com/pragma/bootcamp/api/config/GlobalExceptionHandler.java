@@ -1,7 +1,7 @@
 package co.com.pragma.bootcamp.api.config;
 
-
 import co.com.pragma.bootcamp.api.dto.ApiResponse;
+import co.com.pragma.bootcamp.model.exceptions.BusinessErrorCode;
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import co.com.pragma.bootcamp.model.exceptions.UserErrors;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -34,11 +34,12 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
         ApiResponse<?> apiResponse;
 
         if (ex instanceof BusinessException businessEx) {
-            status = mapUserErrorToHttpStatus(businessEx.getUserError());
+            BusinessErrorCode errorCode = businessEx.getUserError().getErrorCode();
+            status = mapBusinessErrorCodeToHttpStatus(errorCode);
             apiResponse = ApiResponse.businessError(
-                    businessEx.getUserError().getErrorCode().getCode(),
+                    errorCode.getCode(),
                     businessEx.getUserError().getMessage(),
-                    "Bad Request"
+                    errorCode.getDefaultMessage()
             );
         } else if (ex instanceof ConstraintViolationException validationEx) {
             status = HttpStatus.BAD_REQUEST;
@@ -73,8 +74,8 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
         }
     }
 
-    private HttpStatus mapUserErrorToHttpStatus(UserErrors userError) {
-        return switch (userError.getErrorCode()) {
+    private HttpStatus mapBusinessErrorCodeToHttpStatus(BusinessErrorCode errorCode) {
+        return switch (errorCode) {
             case BR_409_CONFLICT -> HttpStatus.CONFLICT;
             case BR_404_NOT_FOUND -> HttpStatus.NOT_FOUND;
             case BR_400_BAD_REQUEST -> HttpStatus.BAD_REQUEST;

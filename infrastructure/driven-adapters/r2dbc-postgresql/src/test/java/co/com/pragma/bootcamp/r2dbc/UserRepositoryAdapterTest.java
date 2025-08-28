@@ -15,6 +15,7 @@ import reactor.test.StepVerifier;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
@@ -85,5 +86,36 @@ class UserRepositoryAdapterTest {
         StepVerifier.create(result)
                 .expectNext(false)
                 .verifyComplete();
+    }
+
+    @Test
+    void toData_shouldMapUserToUserEntity() {
+        // Given
+        User user = User.builder()
+                .id("1")
+                .firstName("Juan")
+                .lastName("Pérez")
+                .email("juan@example.com")
+                .identificationDocument("1030")
+                .build();
+
+        UserEntity userEntity = new UserEntity();
+        userEntity.setId("1");
+        userEntity.setFirstName("Juan");
+        userEntity.setLastName("Pérez");
+        userEntity.setEmail("juan@example.com");
+        userEntity.setIdentificationDocument("1030");
+
+        when(mapper.map(user, UserEntity.class)).thenReturn(userEntity);
+
+        // When
+        UserEntity result = repositoryAdapter.toData(user);
+
+        // Then
+        assertEquals(userEntity.getId(), result.getId());
+        assertEquals(userEntity.getFirstName(), result.getFirstName());
+        assertEquals(userEntity.getLastName(), result.getLastName());
+        assertEquals(userEntity.getEmail(), result.getEmail());
+        assertEquals(userEntity.getIdentificationDocument(), result.getIdentificationDocument());
     }
 }
