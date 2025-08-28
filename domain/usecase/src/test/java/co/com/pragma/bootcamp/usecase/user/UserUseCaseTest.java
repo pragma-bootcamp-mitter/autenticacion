@@ -14,6 +14,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import java.math.BigDecimal;
 
+import static co.com.pragma.bootcamp.model.exceptions.UserErrors.DOCUMENT_OR_EMAIL_ALREADY_REGISTERED;
 import static co.com.pragma.bootcamp.usecase.helper.UserErrors.DOCUMENT_ALREADY_REGISTERED;
 import static co.com.pragma.bootcamp.usecase.helper.UserErrors.EMAIL_ALREADY_REGISTERED;
 import static co.com.pragma.bootcamp.usecase.helper.UserErrors.USER_NOT_FOUND;
@@ -47,61 +48,54 @@ class UserUseCaseTest {
     }
 
     @Test
-    void registerUser_shouldSucceedWhenUserIsValid() {
-        when(userRepository.findByIdentificationDocument(validUser.getIdentificationDocument()))
-                .thenReturn(Mono.empty());
-        when(userRepository.existsByEmail(validUser.getEmail()))
+    void registerUser_shouldRegisterUser_whenUserDoesNotExist() {
+        // Given
+        when(userRepository.existsByEmailOrIdentificationDocument(anyString(), anyString()))
                 .thenReturn(Mono.just(false));
-        when(userRepository.save(validUser))
+        when(userRepository.save(any(User.class)))
                 .thenReturn(Mono.just(validUser));
 
-        StepVerifier.create(userUseCase.registerUser(validUser))
+        // When
+        Mono<User> result = userUseCase.registerUser(validUser);
+
+        // Then
+        StepVerifier.create(result)
                 .expectNext(validUser)
                 .verifyComplete();
 
-        verify(userRepository).save(validUser);
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
-    void registerUser_shouldFailWhenEmailAlreadyExists() {
-        when(userRepository.findByIdentificationDocument(validUser.getIdentificationDocument()))
-                .thenReturn(Mono.empty());
-        when(userRepository.existsByEmail(validUser.getEmail()))
+    void registerUser_shouldThrowException_whenUserAlreadyExists() {
+        // Given
+        when(userRepository.existsByEmailOrIdentificationDocument(anyString(), anyString()))
                 .thenReturn(Mono.just(true));
 
-        StepVerifier.create(userUseCase.registerUser(validUser))
-                .expectErrorSatisfies(error -> {
-                    assert error instanceof BusinessException;
-                    assert error.getMessage().equals(EMAIL_ALREADY_REGISTERED.getMessage());
-                })
+        // When
+        Mono<User> result = userUseCase.registerUser(validUser);
+
+        // Then
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable ->
+                        throwable instanceof BusinessException &&
+                                ((BusinessException) throwable).getUserError().equals(DOCUMENT_OR_EMAIL_ALREADY_REGISTERED)
+                )
                 .verify();
 
-        verify(userRepository, never()).save(any());
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    void registerUser_shouldFailWhenDocumentAlreadyExists() {
-        when(userRepository.findByIdentificationDocument(validUser.getIdentificationDocument()))
-                .thenReturn(Mono.just(validUser));
-
-        when(userRepository.existsByEmail(anyString()))
-                .thenReturn(Mono.just(false));
-
-        StepVerifier.create(userUseCase.registerUser(validUser))
-                .expectErrorSatisfies(error -> {
-                    assert error instanceof BusinessException;
-                    assert error.getMessage().equals(DOCUMENT_ALREADY_REGISTERED.getMessage());
-                })
-                .verify();
-
-        verify(userRepository, never()).save(any());
-    }
-
-    @Test
-    void listUsers_shouldReturnUsersWhenTheyExist() {
+    void listUsers_shouldReturnUsers_whenTheyExist() {
+        // Given
         when(userRepository.findAll()).thenReturn(Flux.just(validUser));
 
-        StepVerifier.create(userUseCase.listUsers())
+        // When
+        Flux<User> result = userUseCase.listUsers();
+
+        // Then
+        StepVerifier.create(result)
                 .expectNext(validUser)
                 .verifyComplete();
 
@@ -109,39 +103,18 @@ class UserUseCaseTest {
     }
 
     @Test
-    void listUsers() {
+    void listUsers_shouldReturnEmptyFlux_whenNoUsersExist() {
+        // Given
         when(userRepository.findAll()).thenReturn(Flux.empty());
 
-        StepVerifier.create(userUseCase.listUsers())
+        // When
+        Flux<User> result = userUseCase.listUsers();
+
+        // Then
+        StepVerifier.create(result)
+                .expectNextCount(0)
                 .verifyComplete();
 
         verify(userRepository).findAll();
-    }
-
-    @Test
-    void getUserByDocument_shouldReturnUserWhenExists() {
-        when(userRepository.findByIdentificationDocument("12345"))
-                .thenReturn(Mono.just(validUser));
-
-        StepVerifier.create(userUseCase.getUserByDocument("12345"))
-                .expectNext(validUser)
-                .verifyComplete();
-
-        verify(userRepository).findByIdentificationDocument("12345");
-    }
-
-    @Test
-    void getUserByDocument_shouldFailWhenUserDoesNotExist() {
-        when(userRepository.findByIdentificationDocument("12345"))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(userUseCase.getUserByDocument("12345"))
-                .expectErrorSatisfies(error -> {
-                    assert error instanceof BusinessException;
-                    assert error.getMessage().equals(USER_NOT_FOUND.getMessage());
-                })
-                .verify();
-
-        verify(userRepository).findByIdentificationDocument("12345");
     }
 }

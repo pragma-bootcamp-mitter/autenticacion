@@ -35,7 +35,7 @@ public class UserRequest {
     private String email;
 
     @NotNull(message = "The base salary is mandatory")
-    @DecimalMin(value = "0.0", inclusive = true, message = "The base salary cannot be negative")
+    @DecimalMin(value = "0.0", message = "The base salary cannot be negative")
     @DecimalMax(value = "15000000.0", message = "The base salary cannot exceed 15 million")
     private BigDecimal baseSalary;
 }

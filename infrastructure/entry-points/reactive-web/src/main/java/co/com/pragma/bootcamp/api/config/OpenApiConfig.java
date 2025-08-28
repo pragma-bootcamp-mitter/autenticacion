@@ -1,11 +1,9 @@
 package co.com.pragma.bootcamp.api.config;
 
-import co.com.pragma.bootcamp.api.Handler;
+import co.com.pragma.bootcamp.api.UserHandler;
 import co.com.pragma.bootcamp.api.dto.UserRequest;
 import co.com.pragma.bootcamp.api.dto.UserResponse;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -45,7 +43,7 @@ public class OpenApiConfig {
                     path = "/api/v1/users",
                     produces = { "application/json" },
                     method = RequestMethod.POST,
-                    beanClass = Handler.class,
+                    beanClass = UserHandler.class,
                     beanMethod = "registerUser",
                     operation = @Operation(
                             operationId = "registerUser",
@@ -67,7 +65,7 @@ public class OpenApiConfig {
                     path = "/api/v1/users",
                     produces = { "application/json" },
                     method = RequestMethod.GET,
-                    beanClass = Handler.class,
+                    beanClass = UserHandler.class,
                     beanMethod = "listUsers",
                     operation = @Operation(
                             operationId = "listUsers",
@@ -78,39 +76,12 @@ public class OpenApiConfig {
                                             content = @Content(schema = @Schema(implementation = UserResponse.class)))
                             }
                     )
-            ),
-            @RouterOperation(
-                    path = "/api/v1/users/{document}",
-                    produces = {"application/json"},
-                    method = RequestMethod.GET,
-                    beanClass = Handler.class,
-                    beanMethod = "getUserByDocument",
-                    operation = @Operation(
-                            operationId = "getUserByDocument",
-                            summary = "Get user by identification document",
-                            tags = {"Users"},
-                            parameters = {
-                                    @Parameter(
-                                            name = "document",
-                                            in = ParameterIn.PATH,
-                                            required = true,
-                                            description = "Document number",
-                                            example = "123456789"
-                                    )
-                            },
-                            responses = {
-                                    @ApiResponse(responseCode = "200", description = "User found",
-                                            content = @Content(schema = @Schema(implementation = UserResponse.class))),
-                                    @ApiResponse(responseCode = "404", description = "User not found")
-                            }
-                    )
             )
     })
-    public RouterFunction<ServerResponse> router(Handler handler) {
+    public RouterFunction<ServerResponse> router(UserHandler userHandler) {
         return RouterFunctions.route()
-                .POST("/api/v1/users", handler::registerUser)
-                .GET("/api/v1/users", handler::listUsers)
-                .GET("/api/v1/users/{document}", handler::getUserByDocument)
+                .POST("/api/v1/users", userHandler::registerUser)
+                .GET("/api/v1/users", userHandler::listUsers)
                 .build();
     }
 }

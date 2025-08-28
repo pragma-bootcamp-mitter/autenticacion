@@ -1,56 +1,84 @@
 package co.com.pragma.bootcamp.api.config;
 
+
 import co.com.pragma.bootcamp.api.dto.ApiResponse;
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
+import co.com.pragma.bootcamp.model.exceptions.UserErrors;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.ConstraintViolationException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.server.ServerWebInputException;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import java.util.List;
+import java.util.Map;
 
-@RestControllerAdvice
+@Component
+@Order(-2)
 @Slf4j
-public class GlobalExceptionHandler {
+@RequiredArgsConstructor
+public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 
-    @ExceptionHandler(ServerWebInputException.class)
-    public Mono<ResponseEntity<ApiResponse<Object>>> handleValidationErrors(ServerWebInputException ex) {
-        log.error("Validation error: {}", ex.getMessage());
-        return Mono.just(
-                ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(ApiResponse.error("Invalid input data: " + ex.getReason()))
-        );
+    private final ObjectMapper objectMapper;
+
+    @Override
+    public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
+        log.error("Handling exception: {}", ex.getMessage());
+        HttpStatus status;
+        ApiResponse<?> apiResponse;
+
+        if (ex instanceof BusinessException businessEx) {
+            status = mapUserErrorToHttpStatus(businessEx.getUserError());
+            apiResponse = ApiResponse.businessError(
+                    businessEx.getUserError().getErrorCode().getCode(),
+                    businessEx.getUserError().getMessage(),
+                    "Bad Request"
+            );
+        } else if (ex instanceof ConstraintViolationException validationEx) {
+            status = HttpStatus.BAD_REQUEST;
+            List<Map<String, String>> errors = validationEx.getConstraintViolations().stream()
+                    .map(v -> Map.of("field", v.getPropertyPath().toString(), "error", v.getMessage()))
+                    .toList();
+            apiResponse = ApiResponse.validationError(errors);
+        } else {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+            apiResponse = ApiResponse.businessError(
+                    "GEN_500",
+                    "An unexpected error has occurred",
+                    "Internal Server Error"
+            );
+            log.error("Unexpected error during request processing", ex);
+        }
+
+        return buildErrorResponse(exchange, status, apiResponse);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public Mono<ResponseEntity<ApiResponse<Object>>> handleIllegalArgument(IllegalArgumentException ex) {
-        return Mono.just(
-                ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(ApiResponse.error(ex.getMessage()))
-        );
+    private Mono<Void> buildErrorResponse(ServerWebExchange exchange, HttpStatus status, ApiResponse<?> apiResponse) {
+        exchange.getResponse().setStatusCode(status);
+        exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+        try {
+            byte[] bytes = objectMapper.writeValueAsBytes(apiResponse);
+            var buffer = exchange.getResponse().bufferFactory().wrap(bytes);
+            return exchange.getResponse().writeWith(Mono.just(buffer));
+        } catch (JsonProcessingException e) {
+            log.error("Error serializing error response", e);
+            exchange.getResponse().setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+            return exchange.getResponse().setComplete();
+        }
     }
 
-    @ExceptionHandler(BusinessException.class)
-    public Mono<ResponseEntity<ApiResponse<Object>>> handleBusiness(BusinessException ex) {
-        log.error("Business logic error: {}", ex.getMessage());
-        return Mono.just(
-                ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(ApiResponse.error(ex.getMessage()))
-        );
-    }
-
-    @ExceptionHandler(Exception.class)
-    public Mono<ResponseEntity<ApiResponse<Object>>> handleGeneric(Exception ex) {
-        log.error("Unexpected error: {}", ex.getMessage(), ex);
-        return Mono.just(
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(ApiResponse.error("An unexpected error has occurred"))
-        );
+    private HttpStatus mapUserErrorToHttpStatus(UserErrors userError) {
+        return switch (userError.getErrorCode()) {
+            case BR_409_CONFLICT -> HttpStatus.CONFLICT;
+            case BR_404_NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case BR_400_BAD_REQUEST -> HttpStatus.BAD_REQUEST;
+            default -> HttpStatus.INTERNAL_SERVER_ERROR;
+        };
     }
 }

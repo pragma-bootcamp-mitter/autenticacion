@@ -17,9 +17,8 @@ public class UserRouter {
     private static final String BASE_PATH   = "/api/v1/users";
 
     @Bean
-    public RouterFunction<ServerResponse> userRoutes(Handler handler) {
-        return route(POST(BASE_PATH ).and(accept(MediaType.APPLICATION_JSON)), handler::registerUser)
-                .andRoute(GET(BASE_PATH ), handler::listUsers)
-                .andRoute(GET(BASE_PATH  + "/{document}"), handler::getUserByDocument);
+    public RouterFunction<ServerResponse> userRoutes(UserHandler userHandler) {
+        return route(POST(BASE_PATH ).and(accept(MediaType.APPLICATION_JSON)), userHandler::registerUser)
+                .andRoute(GET(BASE_PATH ), userHandler::listUsers);
     }
 }

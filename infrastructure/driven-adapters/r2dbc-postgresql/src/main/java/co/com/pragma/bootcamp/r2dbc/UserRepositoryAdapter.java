@@ -28,28 +28,8 @@ public class UserRepositoryAdapter
     }
 
     @Override
-    protected User toEntity(UserEntity data) {
-        return User.builder()
-                .id(data.getId())
-                .identificationDocument(data.getIdentificationDocument())
-                .firstName(data.getFirstName())
-                .lastName(data.getLastName())
-                .dateOfBirth(data.getDateOfBirth())
-                .address(data.getAddress())
-                .phoneNumber(data.getPhoneNumber())
-                .email(data.getEmail())
-                .baseSalary(data.getBaseSalary())
-                .build();
-    }
-
-    public Mono<Boolean> existsByEmail(String email) {
-        return userEntityRepository.findByEmail(email)
-                .hasElement();
-    }
-
-    @Override
-    public Mono<User> findByIdentificationDocument(String identificationDocument) {
-        return repository.findByIdentificationDocument(identificationDocument)
-                .map(this::toEntity);
+    public Mono<Boolean> existsByEmailOrIdentificationDocument(String email, String identificationDocument) {
+        return userEntityRepository.findByEmailOrIdentificationDocument(email, identificationDocument)
+                .hasElements();
     }
 }

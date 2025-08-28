@@ -1,9 +1,10 @@
 package co.com.pragma.bootcamp.api.config;
 
-import co.com.pragma.bootcamp.api.Handler;
+import co.com.pragma.bootcamp.api.UserHandler;
 import co.com.pragma.bootcamp.api.UserRouter;
 import co.com.pragma.bootcamp.api.dto.UserRequest;
 import co.com.pragma.bootcamp.api.dto.UserResponse;
+import co.com.pragma.bootcamp.api.helper.ValidatorUtil;
 import co.com.pragma.bootcamp.api.mapper.UserMapper;
 import co.com.pragma.bootcamp.model.user.User;
 import co.com.pragma.bootcamp.usecase.user.UserUseCase;
@@ -26,9 +27,9 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {UserRouter.class, Handler.class})
 @WebFluxTest
 @Import({CorsConfig.class, SecurityHeadersConfig.class})
+@ContextConfiguration(classes = {UserRouter.class, UserHandler.class, ValidatorUtil.class})
 class ConfigTest {
 
     @Autowired
@@ -61,9 +62,6 @@ class ConfigTest {
         when(userUseCase.listUsers())
                 .thenReturn(Flux.fromIterable(List.of(sampleUser)));
 
-        when(userUseCase.getUserByDocument("12345"))
-                .thenReturn(Mono.just(sampleUser));
-
         when(userMapper.toDomain(any(UserRequest.class)))
                 .thenAnswer(invocation -> sampleUser);
 
@@ -87,7 +85,7 @@ class ConfigTest {
                 .uri("/api/v1/users")
                 .bodyValue(User.builder().build())
                 .exchange()
-                .expectStatus().isOk()
+                .expectStatus().isCreated()
                 .expectHeader().valueEquals("Content-Security-Policy",
                         "default-src 'self'; frame-ancestors 'self'; form-action 'self'")
                 .expectHeader().valueEquals("Strict-Transport-Security", "max-age=31536000;")
@@ -104,23 +102,6 @@ class ConfigTest {
     void corsAndSecurityHeadersAreAppliedOnGetAll() {
         webTestClient.get()
                 .uri("/api/v1/users")
-                .exchange()
-                .expectStatus().isOk()
-                // Security headers
-                .expectHeader().valueEquals("Content-Security-Policy",
-                        "default-src 'self'; frame-ancestors 'self'; form-action 'self'")
-                .expectHeader().valueEquals("Strict-Transport-Security", "max-age=31536000;")
-                .expectHeader().valueEquals("X-Content-Type-Options", "nosniff")
-                .expectHeader().valueEquals("Server", "")
-                .expectHeader().valueEquals("Cache-Control", "no-store")
-                .expectHeader().valueEquals("Pragma", "no-cache")
-                .expectHeader().valueEquals("Referrer-Policy", "strict-origin-when-cross-origin");
-    }
-
-    @Test
-    void corsAndSecurityHeadersAreAppliedOnGetByDocument() {
-        webTestClient.get()
-                .uri("/api/v1/users/12345")
                 .exchange()
                 .expectStatus().isOk()
                 // Security headers

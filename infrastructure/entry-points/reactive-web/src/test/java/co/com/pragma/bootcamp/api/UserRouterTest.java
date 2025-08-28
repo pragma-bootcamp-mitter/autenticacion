@@ -1,6 +1,8 @@
 package co.com.pragma.bootcamp.api;
 
+import co.com.pragma.bootcamp.api.dto.UserRequest;
 import co.com.pragma.bootcamp.api.dto.UserResponse;
+import co.com.pragma.bootcamp.api.helper.ValidatorUtil;
 import co.com.pragma.bootcamp.api.mapper.UserMapper;
 import co.com.pragma.bootcamp.model.user.User;
 import co.com.pragma.bootcamp.usecase.user.UserUseCase;
@@ -9,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -17,15 +20,12 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
 
-@ContextConfiguration(classes = {UserRouter.class, Handler.class})
 @WebFluxTest
+@ContextConfiguration(classes = {UserRouter.class, UserHandler.class, ValidatorUtil.class})
 class UserRouterTest {
 
     @Autowired
@@ -41,105 +41,86 @@ class UserRouterTest {
     private Validator validator;
 
     private User expectedUser;
+    private UserResponse expectedResponse;
 
     @BeforeEach
     void setup() {
-        expectedUser = new User(
-                "12345",
-                "12345",
-                "John",
-                "Doe",
-                LocalDate.of(1990, 5, 15),
-                "Calle Falsa 123",
-                "3001234567",
-                "john.doe@test.com",
-                new BigDecimal("50000.00")
-        );
+        expectedUser = User.builder()
+                .id("12345")
+                .identificationDocument("12345")
+                .firstName("John")
+                .lastName("Doe")
+                .dateOfBirth(LocalDate.of(1990, 5, 15))
+                .address("Calle Falsa 123")
+                .phoneNumber("3001234567")
+                .email("john.doe@test.com")
+                .baseSalary(new BigDecimal("50000.00"))
+                .build();
 
-        when(userMapper.toDomain(any()))
-                .thenReturn(expectedUser);
-
-        when(userUseCase.registerUser(any(User.class)))
-                .thenReturn(Mono.just(expectedUser));
-
-        when(userMapper.toResponse(any(User.class)))
-                .thenAnswer(invocation -> {
-                    User u = invocation.getArgument(0);
-                    UserResponse response = new UserResponse();
-                    response.setId(u.getId());
-                    response.setFirstName(u.getFirstName());
-                    response.setLastName(u.getLastName());
-                    response.setDateOfBirth(u.getDateOfBirth());
-                    response.setBaseSalary(u.getBaseSalary());
-                    return response;
-                });
-
-        when(validator.validate(any())).thenReturn(Collections.emptySet());
+        expectedResponse = new UserResponse();
+        expectedResponse.setId("12345");
+        expectedResponse.setIdentificationDocument("12345");
+        expectedResponse.setFirstName("John");
+        expectedResponse.setLastName("Doe");
+        expectedResponse.setDateOfBirth(LocalDate.of(1990, 5, 15));
+        expectedResponse.setAddress("Calle Falsa 123");
+        expectedResponse.setPhoneNumber("3001234567");
+        expectedResponse.setEmail("john.doe@test.com");
+        expectedResponse.setBaseSalary(new BigDecimal("50000.00"));
     }
 
     @Test
     void registerUser_shouldReturnCreatedUser() {
-        Map<String, Object> body = new HashMap<>();
-        body.put("firstName", "John");
-        body.put("lastName", "Doe");
-        body.put("dateOfBirth", "1990-05-15");
-        body.put("baseSalary", new BigDecimal("50000.00"));
+        // Given
+        UserRequest userRequest = new UserRequest();
+        userRequest.setIdentificationDocument("12345");
+        userRequest.setFirstName("John");
+        userRequest.setLastName("Doe");
+        userRequest.setDateOfBirth(LocalDate.of(1990, 5, 15));
+        userRequest.setAddress("Calle Falsa 123");
+        userRequest.setPhoneNumber("3001234567");
+        userRequest.setEmail("john.doe@test.com");
+        userRequest.setBaseSalary(new BigDecimal("50000.00"));
 
+        when(userMapper.toDomain(any(UserRequest.class))).thenReturn(expectedUser);
+        when(userUseCase.registerUser(any(User.class))).thenReturn(Mono.just(expectedUser));
+        when(userMapper.toResponse(any(User.class))).thenReturn(expectedResponse);
+        when(validator.validate(any())).thenReturn(Collections.emptySet());
+
+        // When/Then
         webTestClient.post()
                 .uri("/api/v1/users")
-                .contentType(APPLICATION_JSON)
-                .accept(APPLICATION_JSON)
-                .bodyValue(body)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(userRequest)
                 .exchange()
-                .expectStatus().isOk()
+                .expectStatus().isCreated()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBody()
-                .jsonPath("$.success").isEqualTo(true)
-                .jsonPath("$.message").isEqualTo("User created successfully")
+                .jsonPath("$.code").isEqualTo("B200-000")
+                .jsonPath("$.message").isEqualTo("Operation carried out successfully")
+                .jsonPath("$.title").isEqualTo("successfully")
                 .jsonPath("$.data.id").isEqualTo("12345")
                 .jsonPath("$.data.firstName").isEqualTo("John");
     }
+
     @Test
     void listUsers_shouldReturnListOfUsers() {
+        // Given
         when(userUseCase.listUsers()).thenReturn(Flux.just(expectedUser));
+        when(userMapper.toResponse(any(User.class))).thenReturn(expectedResponse);
 
+        // When/Then
         webTestClient.get()
                 .uri("/api/v1/users")
-                .accept(APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.success").isEqualTo(true)
-                .jsonPath("$.message").isEqualTo("Users retrieved successfully")
+                .jsonPath("$.code").isEqualTo("B200-000")
+                .jsonPath("$.message").isEqualTo("Operation carried out successfully")
+                .jsonPath("$.title").isEqualTo("successfully")
                 .jsonPath("$.data[0].id").isEqualTo("12345")
                 .jsonPath("$.data[0].firstName").isEqualTo("John");
-    }
-
-    @Test
-    void getUserByDocument_shouldReturnUserWhenExists() {
-        String document = "12345";
-        when(userUseCase.getUserByDocument(document)).thenReturn(Mono.just(expectedUser));
-
-        webTestClient.get()
-                .uri("/api/v1/users/{document}", document)
-                .accept(APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.success").isEqualTo(true)
-                .jsonPath("$.message").isEqualTo("User found")
-                .jsonPath("$.data.id").isEqualTo("12345")
-                .jsonPath("$.data.firstName").isEqualTo("John");
-    }
-
-    @Test
-    void getUserByDocument_shouldReturnNotFoundWhenDoesNotExist() {
-        String documento = "99999";
-        when(userUseCase.getUserByDocument(documento)).thenReturn(Mono.empty());
-
-        webTestClient.get()
-                .uri("/api/v1/users/{document}", documento)
-                .accept(APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isNotFound();
     }
 }
