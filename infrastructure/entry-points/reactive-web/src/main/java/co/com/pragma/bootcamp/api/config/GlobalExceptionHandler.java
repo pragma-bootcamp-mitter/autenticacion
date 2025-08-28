@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-@Order(-2)
 @Slf4j
 @RequiredArgsConstructor
 public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
