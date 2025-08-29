@@ -3,14 +3,12 @@ package co.com.pragma.bootcamp.api.config;
 import co.com.pragma.bootcamp.api.dto.ApiResponse;
 import co.com.pragma.bootcamp.model.exceptions.BusinessErrorCode;
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
-import co.com.pragma.bootcamp.model.exceptions.UserErrors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -29,34 +27,37 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
         log.error("Handling exception: {}", ex.getMessage());
-        HttpStatus status;
-        ApiResponse<?> apiResponse;
 
-        if (ex instanceof BusinessException businessEx) {
-            BusinessErrorCode errorCode = businessEx.getUserError().getErrorCode();
-            status = mapBusinessErrorCodeToHttpStatus(errorCode);
-            apiResponse = ApiResponse.businessError(
-                    errorCode.getCode(),
-                    businessEx.getUserError().getMessage(),
-                    errorCode.getDefaultMessage()
-            );
-        } else if (ex instanceof ConstraintViolationException validationEx) {
-            status = HttpStatus.BAD_REQUEST;
-            List<Map<String, String>> errors = validationEx.getConstraintViolations().stream()
-                    .map(v -> Map.of("field", v.getPropertyPath().toString(), "error", v.getMessage()))
-                    .toList();
-            apiResponse = ApiResponse.validationError(errors);
-        } else {
-            status = HttpStatus.INTERNAL_SERVER_ERROR;
-            apiResponse = ApiResponse.businessError(
-                    "GEN_500",
-                    "An unexpected error has occurred",
-                    "Internal Server Error"
-            );
-            log.error("Unexpected error during request processing", ex);
-        }
-
-        return buildErrorResponse(exchange, status, apiResponse);
+        return switch (ex) {
+            case BusinessException businessEx -> {
+                BusinessErrorCode errorCode = businessEx.getUserError().getErrorCode();
+                HttpStatus status = mapBusinessErrorCodeToHttpStatus(errorCode);
+                ApiResponse<?> apiResponse = ApiResponse.businessError(
+                        errorCode.getCode(),
+                        businessEx.getUserError().getMessage(),
+                        errorCode.getDefaultMessage()
+                );
+                yield buildErrorResponse(exchange, status, apiResponse);
+            }
+            case ConstraintViolationException validationEx -> {
+                HttpStatus status = HttpStatus.BAD_REQUEST;
+                List<Map<String, String>> errors = validationEx.getConstraintViolations().stream()
+                        .map(v -> Map.of("field", v.getPropertyPath().toString(), "error", v.getMessage()))
+                        .toList();
+                ApiResponse<?> apiResponse = ApiResponse.validationError(errors);
+                yield buildErrorResponse(exchange, status, apiResponse);
+            }
+            default -> {
+                HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+                ApiResponse<?> apiResponse = ApiResponse.businessError(
+                        "GEN_500",
+                        "An unexpected error has occurred",
+                        "Internal Server Error"
+                );
+                log.error("Unexpected error during request processing", ex);
+                yield buildErrorResponse(exchange, status, apiResponse);
+            }
+        };
     }
 
     private Mono<Void> buildErrorResponse(ServerWebExchange exchange, HttpStatus status, ApiResponse<?> apiResponse) {

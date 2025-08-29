@@ -9,15 +9,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivecommons.utils.ObjectMapper;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.lenient;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,6 +29,9 @@ class UserRepositoryAdapterTest {
 
     @Mock
     ObjectMapper mapper;
+
+    @Mock
+    TransactionalOperator transactionalOperator;
 
     private UserEntity sampleData;
     private User sampleDomain;
@@ -56,16 +57,13 @@ class UserRepositoryAdapterTest {
 
     @Test
     void existsByEmailOrIdentificationDocument_shouldReturnTrue_whenUserExists() {
-        // Given
         when(userEntityRepository
                 .findByEmailOrIdentificationDocument("test@example.com", "12345"))
                 .thenReturn(Flux.just(sampleData));
 
-        // When
         Mono<Boolean> result = repositoryAdapter
                 .existsByEmailOrIdentificationDocument("test@example.com", "12345");
 
-        // Then
         StepVerifier.create(result)
                 .expectNext(true)
                 .verifyComplete();
@@ -73,49 +71,66 @@ class UserRepositoryAdapterTest {
 
     @Test
     void existsByEmailOrIdentificationDocument_shouldReturnFalse_whenUserDoesNotExist() {
-        // Given
         when(userEntityRepository
                 .findByEmailOrIdentificationDocument("no-user@example.com", "999"))
                 .thenReturn(Flux.empty());
 
-        // When
         Mono<Boolean> result = repositoryAdapter
                 .existsByEmailOrIdentificationDocument("no-user@example.com", "999");
 
-        // Then
         StepVerifier.create(result)
                 .expectNext(false)
                 .verifyComplete();
     }
 
     @Test
-    void toData_shouldMapUserToUserEntity() {
-        // Given
-        User user = User.builder()
-                .id("1")
-                .firstName("Juan")
-                .lastName("Pérez")
-                .email("juan@example.com")
-                .identificationDocument("1030")
-                .build();
+    void findByIdentificationDocument_shouldReturnUser_whenUserExists() {
+        String document = "1030";
+        when(userEntityRepository.findByIdentificationDocument(document))
+                .thenReturn(Mono.just(sampleData));
+        when(mapper.map(any(UserEntity.class), any())).thenReturn(sampleDomain);
 
-        UserEntity userEntity = new UserEntity();
-        userEntity.setId("1");
-        userEntity.setFirstName("Juan");
-        userEntity.setLastName("Pérez");
-        userEntity.setEmail("juan@example.com");
-        userEntity.setIdentificationDocument("1030");
+        Mono<User> result = repositoryAdapter.findByIdentificationDocument(document);
 
-        when(mapper.map(user, UserEntity.class)).thenReturn(userEntity);
+        StepVerifier.create(result)
+                .expectNext(sampleDomain)
+                .verifyComplete();
+    }
 
-        // When
-        UserEntity result = repositoryAdapter.toData(user);
+    @Test
+    void findByIdentificationDocument_shouldReturnEmptyMono_whenUserDoesNotExist() {
+        String document = "9999";
+        when(userEntityRepository.findByIdentificationDocument(document))
+                .thenReturn(Mono.empty());
 
-        // Then
-        assertEquals(userEntity.getId(), result.getId());
-        assertEquals(userEntity.getFirstName(), result.getFirstName());
-        assertEquals(userEntity.getLastName(), result.getLastName());
-        assertEquals(userEntity.getEmail(), result.getEmail());
-        assertEquals(userEntity.getIdentificationDocument(), result.getIdentificationDocument());
+        Mono<User> result = repositoryAdapter.findByIdentificationDocument(document);
+
+        StepVerifier.create(result)
+                .expectComplete();
+    }
+
+    @Test
+    void save_shouldReturnUser_whenSaveIsSuccessful() {
+        when(mapper.map(any(User.class), any())).thenReturn(sampleData);
+        when(mapper.map(any(UserEntity.class), any())).thenReturn(sampleDomain);
+        when(transactionalOperator.execute(any())).thenReturn(Flux.just(sampleData));
+
+        Mono<User> result = repositoryAdapter.save(sampleDomain);
+
+        StepVerifier.create(result)
+                .expectNext(sampleDomain)
+                .verifyComplete();
+    }
+
+    @Test
+    void save_shouldReturnError_whenTransactionFails() {
+        when(mapper.map(any(User.class), any())).thenReturn(sampleData);
+        when(transactionalOperator.execute(any())).thenReturn(Flux.error(new RuntimeException("Simulated database error")));
+
+        Mono<User> result = repositoryAdapter.save(sampleDomain);
+
+        StepVerifier.create(result)
+                .expectError(RuntimeException.class)
+                .verify();
     }
 }

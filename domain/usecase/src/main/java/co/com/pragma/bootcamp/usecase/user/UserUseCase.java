@@ -24,4 +24,8 @@ public class UserUseCase {
     public Flux<User> listUsers() {
         return userRepository.findAll();
     }
+
+    public Mono<User> getUserByDocument(String document) {
+        return userRepository.findByIdentificationDocument(document);
+    }
 }

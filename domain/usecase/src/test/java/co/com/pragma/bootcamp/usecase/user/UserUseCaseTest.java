@@ -46,16 +46,13 @@ class UserUseCaseTest {
 
     @Test
     void registerUser_shouldRegisterUser_whenUserDoesNotExist() {
-        // Given
         when(userRepository.existsByEmailOrIdentificationDocument(anyString(), anyString()))
                 .thenReturn(Mono.just(false));
         when(userRepository.save(any(User.class)))
                 .thenReturn(Mono.just(validUser));
 
-        // When
         Mono<User> result = userUseCase.registerUser(validUser);
 
-        // Then
         StepVerifier.create(result)
                 .expectNext(validUser)
                 .verifyComplete();
@@ -65,14 +62,11 @@ class UserUseCaseTest {
 
     @Test
     void registerUser_shouldThrowException_whenUserAlreadyExists() {
-        // Given
         when(userRepository.existsByEmailOrIdentificationDocument(anyString(), anyString()))
                 .thenReturn(Mono.just(true));
 
-        // When
         Mono<User> result = userUseCase.registerUser(validUser);
 
-        // Then
         StepVerifier.create(result)
                 .expectErrorMatches(throwable ->
                         throwable instanceof BusinessException &&
@@ -85,13 +79,10 @@ class UserUseCaseTest {
 
     @Test
     void listUsers_shouldReturnUsers_whenTheyExist() {
-        // Given
         when(userRepository.findAll()).thenReturn(Flux.just(validUser));
 
-        // When
         Flux<User> result = userUseCase.listUsers();
 
-        // Then
         StepVerifier.create(result)
                 .expectNext(validUser)
                 .verifyComplete();
@@ -101,17 +92,44 @@ class UserUseCaseTest {
 
     @Test
     void listUsers_shouldReturnEmptyFlux_whenNoUsersExist() {
-        // Given
         when(userRepository.findAll()).thenReturn(Flux.empty());
 
-        // When
         Flux<User> result = userUseCase.listUsers();
 
-        // Then
         StepVerifier.create(result)
                 .expectNextCount(0)
                 .verifyComplete();
 
         verify(userRepository).findAll();
+    }
+
+    @Test
+    void getUserByDocument_shouldReturnUser_whenUserExists() {
+        String document = "12345";
+        when(userRepository.findByIdentificationDocument(document))
+                .thenReturn(Mono.just(validUser));
+
+        Mono<User> result = userUseCase.getUserByDocument(document);
+
+        StepVerifier.create(result)
+                .expectNext(validUser)
+                .verifyComplete();
+
+        verify(userRepository).findByIdentificationDocument(document);
+    }
+
+    @Test
+    void getUserByDocument_shouldReturnEmptyMono_whenUserDoesNotExist() {
+        String document = "99999";
+        when(userRepository.findByIdentificationDocument(document))
+                .thenReturn(Mono.empty());
+
+        Mono<User> result = userUseCase.getUserByDocument(document);
+
+        StepVerifier.create(result)
+                .expectNextCount(0)
+                .verifyComplete();
+
+        verify(userRepository).findByIdentificationDocument(document);
     }
 }

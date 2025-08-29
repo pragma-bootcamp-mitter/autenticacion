@@ -4,6 +4,10 @@ public enum UserErrors {
     DOCUMENT_OR_EMAIL_ALREADY_REGISTERED(
             BusinessErrorCode.BR_409_CONFLICT,
             "The provided identification document or email address is already in use"
+    ),
+    USER_NOT_FOUND(
+            BusinessErrorCode.BR_404_NOT_FOUND,
+            "User not found"
     );
 
     private final BusinessErrorCode errorCode;

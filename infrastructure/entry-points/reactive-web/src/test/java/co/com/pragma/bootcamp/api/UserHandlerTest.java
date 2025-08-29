@@ -28,6 +28,7 @@ import java.time.LocalDate;
 import java.util.Set;
 
 import static co.com.pragma.bootcamp.model.exceptions.UserErrors.DOCUMENT_OR_EMAIL_ALREADY_REGISTERED;
+import static co.com.pragma.bootcamp.model.exceptions.UserErrors.USER_NOT_FOUND;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -93,17 +94,14 @@ class UserHandlerTest {
 
     @Test
     void registerUser_shouldReturnCreated_whenSuccessful() {
-        // Given
         when(serverRequest.bodyToMono(UserRequest.class)).thenReturn(Mono.just(testUserRequest));
         when(validatorUtil.validate(testUserRequest)).thenReturn(Mono.just(testUserRequest));
         when(userMapper.toDomain(testUserRequest)).thenReturn(testUserDomain);
         when(userUseCase.registerUser(testUserDomain)).thenReturn(Mono.just(testUserDomain));
         when(userMapper.toResponse(testUserDomain)).thenReturn(testUserResponse);
 
-        // When
         Mono<ServerResponse> responseMono = userHandler.registerUser(serverRequest);
 
-        // Then
         StepVerifier.create(responseMono)
                 .expectNextMatches(serverResponse ->
                         serverResponse.statusCode().equals(HttpStatus.CREATED)
@@ -113,17 +111,14 @@ class UserHandlerTest {
 
     @Test
     void registerUser_shouldReturnConflict_whenUserAlreadyExists() {
-        // Given
         when(serverRequest.bodyToMono(UserRequest.class)).thenReturn(Mono.just(testUserRequest));
         when(validatorUtil.validate(testUserRequest)).thenReturn(Mono.just(testUserRequest));
         when(userMapper.toDomain(testUserRequest)).thenReturn(testUserDomain);
         when(userUseCase.registerUser(testUserDomain))
                 .thenReturn(Mono.error(new BusinessException(DOCUMENT_OR_EMAIL_ALREADY_REGISTERED)));
 
-        // When
         Mono<ServerResponse> responseMono = userHandler.registerUser(serverRequest);
 
-        // Then
         StepVerifier.create(responseMono)
                 .expectErrorMatches(throwable ->
                         throwable instanceof BusinessException &&
@@ -135,9 +130,8 @@ class UserHandlerTest {
 
     @Test
     void registerUser_shouldReturnBadRequest_whenValidationFails() {
-        // Given
         Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
-        UserRequest invalidUserRequest = new UserRequest(); // Create an invalid object
+        UserRequest invalidUserRequest = new UserRequest();
         Set<ConstraintViolation<UserRequest>> violations = validator.validate(invalidUserRequest);
 
         ConstraintViolationException validationException = new ConstraintViolationException(violations);
@@ -145,10 +139,8 @@ class UserHandlerTest {
         when(serverRequest.bodyToMono(UserRequest.class)).thenReturn(Mono.just(invalidUserRequest));
         when(validatorUtil.validate(invalidUserRequest)).thenReturn(Mono.error(validationException));
 
-        // When
         Mono<ServerResponse> responseMono = userHandler.registerUser(serverRequest);
 
-        // Then
         StepVerifier.create(responseMono)
                 .expectErrorMatches(ConstraintViolationException.class::isInstance
                 )
@@ -157,14 +149,11 @@ class UserHandlerTest {
 
     @Test
     void listUsers_shouldReturnOk_whenUsersExist() {
-        // Given
         when(userUseCase.listUsers()).thenReturn(Flux.just(testUserDomain));
         when(userMapper.toResponse(testUserDomain)).thenReturn(testUserResponse);
 
-        // When
         Mono<ServerResponse> responseMono = userHandler.listUsers(serverRequest);
 
-        // Then
         StepVerifier.create(responseMono)
                 .expectNextMatches(serverResponse ->
                         serverResponse.statusCode().equals(HttpStatus.OK)
@@ -174,17 +163,46 @@ class UserHandlerTest {
 
     @Test
     void listUsers_shouldReturnOk_whenNoUsersExist() {
-        // Given
         when(userUseCase.listUsers()).thenReturn(Flux.empty());
 
-        // When
         Mono<ServerResponse> responseMono = userHandler.listUsers(serverRequest);
 
-        // Then
         StepVerifier.create(responseMono)
                 .expectNextMatches(serverResponse ->
                         serverResponse.statusCode().equals(HttpStatus.OK)
                 )
                 .verifyComplete();
+    }
+
+    @Test
+    void getUserByDocument_shouldReturnOk_whenUserExists() {
+        String document = "12345";
+        when(serverRequest.pathVariable("document")).thenReturn(document);
+        when(userUseCase.getUserByDocument(document)).thenReturn(Mono.just(testUserDomain));
+        when(userMapper.toResponse(testUserDomain)).thenReturn(testUserResponse);
+
+        Mono<ServerResponse> responseMono = userHandler.getUserByDocument(serverRequest);
+
+        StepVerifier.create(responseMono)
+                .expectNextMatches(serverResponse ->
+                        serverResponse.statusCode().equals(HttpStatus.OK)
+                )
+                .verifyComplete();
+    }
+
+    @Test
+    void getUserByDocument_shouldReturnNotFound_whenUserDoesNotExist() {
+        String document = "99999";
+        when(serverRequest.pathVariable("document")).thenReturn(document);
+        when(userUseCase.getUserByDocument(document)).thenReturn(Mono.empty());
+
+        Mono<ServerResponse> responseMono = userHandler.getUserByDocument(serverRequest);
+
+        StepVerifier.create(responseMono)
+                .expectErrorMatches(throwable ->
+                        throwable instanceof BusinessException &&
+                                ((BusinessException) throwable).getUserError().equals(USER_NOT_FOUND)
+                )
+                .verify();
     }
 }

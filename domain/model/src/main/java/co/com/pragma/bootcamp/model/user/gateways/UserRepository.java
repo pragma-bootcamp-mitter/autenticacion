@@ -8,4 +8,5 @@ public interface UserRepository {
     Mono<User> save(User user);
     Mono<Boolean> existsByEmailOrIdentificationDocument(String email, String identificationDocument);
     Flux<User> findAll();
+    Mono<User> findByIdentificationDocument(String identificationDocument);
 }

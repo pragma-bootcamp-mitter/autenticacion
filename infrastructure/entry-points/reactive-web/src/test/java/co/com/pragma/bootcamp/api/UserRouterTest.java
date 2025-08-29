@@ -26,6 +26,7 @@ import java.util.Collections;
 
 import static co.com.pragma.bootcamp.model.exceptions.UserErrors.DOCUMENT_OR_EMAIL_ALREADY_REGISTERED;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @WebFluxTest
@@ -75,7 +76,6 @@ class UserRouterTest {
 
     @Test
     void registerUser_shouldReturnCreatedUser() {
-        // Given
         UserRequest userRequest = new UserRequest();
         userRequest.setIdentificationDocument("12345");
         userRequest.setFirstName("John");
@@ -91,7 +91,6 @@ class UserRouterTest {
         when(userMapper.toResponse(any(User.class))).thenReturn(expectedResponse);
         when(validator.validate(any())).thenReturn(Collections.emptySet());
 
-        // When/Then
         webTestClient.post()
                 .uri("/api/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -110,11 +109,9 @@ class UserRouterTest {
 
     @Test
     void listUsers_shouldReturnListOfUsers() {
-        // Given
         when(userUseCase.listUsers()).thenReturn(Flux.just(expectedUser));
         when(userMapper.toResponse(any(User.class))).thenReturn(expectedResponse);
 
-        // When/Then
         webTestClient.get()
                 .uri("/api/v1/users")
                 .accept(MediaType.APPLICATION_JSON)
@@ -132,7 +129,6 @@ class UserRouterTest {
 
     @Test
     void registerUser_shouldReturnConflict_whenUserAlreadyExists() {
-        // Given
         UserRequest userRequest = new UserRequest();
         userRequest.setIdentificationDocument("12345");
         userRequest.setFirstName("Juan");
@@ -147,7 +143,6 @@ class UserRouterTest {
         when(userUseCase.registerUser(any(User.class)))
                 .thenReturn(Mono.error(new BusinessException(DOCUMENT_OR_EMAIL_ALREADY_REGISTERED)));
 
-        // When/Then
         webTestClient.post()
                 .uri("/api/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -158,7 +153,46 @@ class UserRouterTest {
                 .expectBody()
                 .jsonPath("$.code").isEqualTo("BR_409_CONFLICT")
                 .jsonPath("$.message").isEqualTo("The provided identification document or email address is already in use")
-                .jsonPath("$.title").isEqualTo("Conflict with existing data") // <-- Corrected
+                .jsonPath("$.title").isEqualTo("Conflict with existing data")
+                .jsonPath("$.data").doesNotExist()
+                .jsonPath("$.errors").doesNotExist();
+    }
+
+    @Test
+    void getUserByDocument_shouldReturnUser_whenUserExists() {
+        String document = "12345";
+        when(userUseCase.getUserByDocument(anyString())).thenReturn(Mono.just(expectedUser));
+        when(userMapper.toResponse(any(User.class))).thenReturn(expectedResponse);
+
+        webTestClient.get()
+                .uri("/api/v1/users/{document}", document)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody()
+                .jsonPath("$.code").isEqualTo("B200-000")
+                .jsonPath("$.message").isEqualTo("Operation carried out successfully")
+                .jsonPath("$.title").isEqualTo("successfully")
+                .jsonPath("$.data.id").isEqualTo("12345")
+                .jsonPath("$.data.firstName").isEqualTo("John");
+    }
+
+    @Test
+    void getUserByDocument_shouldReturnNotFound_whenUserDoesNotExist() {
+        String document = "99999";
+        when(userUseCase.getUserByDocument(anyString())).thenReturn(Mono.empty());
+
+        webTestClient.get()
+                .uri("/api/v1/users/{document}", document)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody()
+                .jsonPath("$.code").isEqualTo("BR_404_NOT_FOUND")
+                .jsonPath("$.message").isEqualTo("User not found")
+                .jsonPath("$.title").isEqualTo("Resource not found")
                 .jsonPath("$.data").doesNotExist()
                 .jsonPath("$.errors").doesNotExist();
     }
