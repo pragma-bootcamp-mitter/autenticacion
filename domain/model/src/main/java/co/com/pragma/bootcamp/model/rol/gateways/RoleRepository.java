@@ -1,4 +1,4 @@
 package co.com.pragma.bootcamp.model.rol.gateways;
 
-public interface RolRepository {
+public interface RoleRepository {
 }

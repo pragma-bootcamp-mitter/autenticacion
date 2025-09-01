@@ -1,6 +1,7 @@
 package co.com.pragma.bootcamp.usecase.user;
 
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
+import co.com.pragma.bootcamp.model.login.gateways.PasswordGateway;
 import co.com.pragma.bootcamp.model.user.User;
 import co.com.pragma.bootcamp.model.user.gateways.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,13 +14,25 @@ import static co.com.pragma.bootcamp.model.exceptions.UserErrors.DOCUMENT_OR_EMA
 public class UserUseCase {
 
     private final UserRepository userRepository;
+    private final PasswordGateway passwordGateway;
 
-    public Mono<User> registerUser(User user) {
+    public Mono<User> registerUser1(User user) {
         return userRepository.existsByEmailOrIdentificationDocument(user.getEmail(), user.getIdentificationDocument())
                 .filter(exists -> !Boolean.TRUE.equals(exists))
                 .switchIfEmpty(Mono.error(new BusinessException(DOCUMENT_OR_EMAIL_ALREADY_REGISTERED)))
                 .flatMap(exists -> userRepository.save(user));
     }
+
+
+    public Mono<User> registerUser(User user) {
+        return userRepository.existsByEmailOrIdentificationDocument(user.getEmail(), user.getIdentificationDocument())
+                .filter(exists -> !Boolean.TRUE.equals(exists))
+                .switchIfEmpty(Mono.error(new BusinessException(DOCUMENT_OR_EMAIL_ALREADY_REGISTERED)))
+                .thenReturn(user) .map(u -> { u.setPassword(passwordGateway.encode(u.getPassword()));
+                    return u; })
+                .flatMap(exists -> userRepository.save(user));
+    }
+
 
     public Flux<User> listUsers() {
         return userRepository.findAll();

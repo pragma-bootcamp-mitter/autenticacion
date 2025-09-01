@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-public class Rol {
-    private String id;
-    private String nombre;
-    private String descripcion;
+public class Role {
+    private Integer id;
+    private String name;
+    private String description;
 }

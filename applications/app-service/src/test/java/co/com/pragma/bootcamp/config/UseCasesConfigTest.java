@@ -1,6 +1,8 @@
 package co.com.pragma.bootcamp.config;
 
+import co.com.pragma.bootcamp.model.login.gateways.PasswordGateway;
 import co.com.pragma.bootcamp.model.user.gateways.UserRepository;
+import co.com.pragma.bootcamp.usecase.login.LogInUseCase;
 import co.com.pragma.bootcamp.usecase.user.UserUseCase;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -36,6 +38,9 @@ public class UseCasesConfigTest {
         @Mock
         private UserRepository userRepository;
 
+        @Mock
+        private PasswordGateway passwordGateway;
+
         @Bean
         public MyUseCase myUseCase() {
             return new MyUseCase();
@@ -43,7 +48,12 @@ public class UseCasesConfigTest {
 
         @Bean
         public UserUseCase userUseCase() {
-            return new UserUseCase(userRepository);
+            return new UserUseCase(userRepository, passwordGateway);
+        }
+
+        @Bean
+        public LogInUseCase logInUseCase() {
+            return new LogInUseCase();
         }
     }
 

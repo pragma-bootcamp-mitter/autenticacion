@@ -1,6 +1,7 @@
 package co.com.pragma.bootcamp.r2dbc;
 
 import co.com.pragma.bootcamp.model.user.User;
+import co.com.pragma.bootcamp.r2dbc.adapter.UserRepositoryAdapter;
 import co.com.pragma.bootcamp.r2dbc.entity.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
