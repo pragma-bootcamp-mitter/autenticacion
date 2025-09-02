@@ -17,10 +17,13 @@ import java.util.Date;
 @Slf4j
 public class TokenAdapter implements TokenGateway {
 
-    private static final long EXPIRATION_TIME = 1000L * 60 * 60;
+    private final long expirationTime;
     private final SecretKey secretKey;
 
-    public TokenAdapter(@Value("${jwt.secret}") String secret) {
+    public TokenAdapter
+            (@Value("${jwt.expiration-time}") long expirationTime,
+             @Value("${jwt.secret}") String secret) {
+        this.expirationTime = expirationTime;
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -31,7 +34,7 @@ public class TokenAdapter implements TokenGateway {
                     .subject(email)
                     .claim("role", role)
                     .issuedAt(new Date())
-                    .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                    .expiration(new Date(System.currentTimeMillis() + expirationTime))
                     .signWith(secretKey)
                     .compact();
 

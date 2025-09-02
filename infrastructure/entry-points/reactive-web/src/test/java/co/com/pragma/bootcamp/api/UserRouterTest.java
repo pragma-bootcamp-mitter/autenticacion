@@ -1,10 +1,12 @@
 package co.com.pragma.bootcamp.api;
 
 import co.com.pragma.bootcamp.api.config.GlobalExceptionHandler;
-import co.com.pragma.bootcamp.api.dto.UserRequest;
-import co.com.pragma.bootcamp.api.dto.UserResponse;
+import co.com.pragma.bootcamp.api.dto.user.UserRequest;
+import co.com.pragma.bootcamp.api.dto.user.UserResponse;
 import co.com.pragma.bootcamp.api.helper.ValidatorUtil;
 import co.com.pragma.bootcamp.api.mapper.UserMapper;
+import co.com.pragma.bootcamp.api.web.user.UserHandler;
+import co.com.pragma.bootcamp.api.web.user.UserRouter;
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import co.com.pragma.bootcamp.model.user.User;
 import co.com.pragma.bootcamp.usecase.user.UserUseCase;

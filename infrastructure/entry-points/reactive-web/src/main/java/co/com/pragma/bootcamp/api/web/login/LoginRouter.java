@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.api;
+package co.com.pragma.bootcamp.api.web.login;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

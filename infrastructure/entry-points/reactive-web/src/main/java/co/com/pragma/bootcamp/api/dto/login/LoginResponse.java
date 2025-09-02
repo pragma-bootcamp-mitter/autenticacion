@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.api.dto;
+package co.com.pragma.bootcamp.api.dto.login;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

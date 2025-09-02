@@ -1,7 +1,7 @@
-package co.com.pragma.bootcamp.api;
+package co.com.pragma.bootcamp.api.web.login;
 
 import co.com.pragma.bootcamp.api.dto.ApiResponse;
-import co.com.pragma.bootcamp.api.dto.LoginRequest;
+import co.com.pragma.bootcamp.api.dto.login.LoginRequest;
 import co.com.pragma.bootcamp.api.helper.ValidatorUtil;
 import co.com.pragma.bootcamp.api.mapper.LogInMapper;
 import co.com.pragma.bootcamp.usecase.login.LogInUseCase;

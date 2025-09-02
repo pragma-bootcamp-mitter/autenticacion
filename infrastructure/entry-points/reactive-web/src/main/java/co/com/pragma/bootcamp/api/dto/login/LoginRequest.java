@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.api.dto;
+package co.com.pragma.bootcamp.api.dto.login;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

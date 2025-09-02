@@ -33,4 +33,5 @@ adapters:
     schema: ${DB_SCHEMA:public}
 
 jwt:
-  secret: "c2VjcmV0LWxsbGF2ZS1wYXJhLXRva2VuZXMtZ2VuZXJpY29zLWRlLXByYWdtYS1ib290Y2FtcA=="
+  secret: ${JWT_SECRET:}
+  expiration-time: ${JWT_EXPIRATION:}
