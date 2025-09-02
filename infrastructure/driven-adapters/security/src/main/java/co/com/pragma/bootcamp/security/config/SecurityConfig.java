@@ -4,6 +4,7 @@ import co.com.pragma.bootcamp.security.adapter.TokenAdapter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
@@ -20,6 +21,7 @@ public class SecurityConfig {
 
     private final ReactiveAuthenticationManager authenticationManager;
     private final TokenAdapter tokenGateway;
+    public static final String ADMIN = "ADMIN";
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -36,7 +38,9 @@ public class SecurityConfig {
                         .pathMatchers("/swagger-ui/**").permitAll()
                         .pathMatchers("/v3/api-docs/**").permitAll()
                         .pathMatchers("/api/v1/login/**").permitAll()
-                        .pathMatchers("/api/v1/users/**").hasAnyRole("ADMIN", "ADVISOR")
+                        .pathMatchers(HttpMethod.POST, "/api/v1/users/**").hasAnyRole(ADMIN, "ADVISOR")
+                        .pathMatchers(HttpMethod.GET, "/api/v1/users").hasRole(ADMIN)
+                        .pathMatchers(HttpMethod.GET, "/api/v1/users/{document}").hasAnyRole(ADMIN, "ADVISOR", "CLIENT")
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)
