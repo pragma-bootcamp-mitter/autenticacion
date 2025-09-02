@@ -24,6 +24,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 
+import static co.com.pragma.bootcamp.api.util.AuthConstants.SUCCESS_CODE;
+import static co.com.pragma.bootcamp.api.util.AuthConstants.SUCCESS_MESSAGE;
+import static co.com.pragma.bootcamp.api.util.AuthConstants.SUCCESS_TITLE;
 import static co.com.pragma.bootcamp.model.exceptions.UserErrors.DOCUMENT_OR_EMAIL_ALREADY_REGISTERED;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -100,9 +103,9 @@ class UserRouterTest {
                 .expectStatus().isCreated()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBody()
-                .jsonPath("$.code").isEqualTo("B200-000")
-                .jsonPath("$.message").isEqualTo("Operation carried out successfully")
-                .jsonPath("$.title").isEqualTo("successfully")
+                .jsonPath("$.code").isEqualTo(SUCCESS_CODE)
+                .jsonPath("$.message").isEqualTo(SUCCESS_MESSAGE)
+                .jsonPath("$.title").isEqualTo(SUCCESS_TITLE)
                 .jsonPath("$.data.id").isEqualTo("12345")
                 .jsonPath("$.data.firstName").isEqualTo("John");
     }
@@ -118,9 +121,9 @@ class UserRouterTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.code").isEqualTo("B200-000")
-                .jsonPath("$.message").isEqualTo("Operation carried out successfully")
-                .jsonPath("$.title").isEqualTo("successfully")
+                .jsonPath("$.code").isEqualTo(SUCCESS_CODE)
+                .jsonPath("$.message").isEqualTo(SUCCESS_MESSAGE)
+                .jsonPath("$.title").isEqualTo(SUCCESS_TITLE)
                 .jsonPath("$.data[0].id").isEqualTo("12345")
                 .jsonPath("$.data[0].firstName").isEqualTo("John");
     }
@@ -171,9 +174,9 @@ class UserRouterTest {
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBody()
-                .jsonPath("$.code").isEqualTo("B200-000")
-                .jsonPath("$.message").isEqualTo("Operation carried out successfully")
-                .jsonPath("$.title").isEqualTo("successfully")
+                .jsonPath("$.code").isEqualTo(SUCCESS_CODE)
+                .jsonPath("$.message").isEqualTo(SUCCESS_MESSAGE)
+                .jsonPath("$.title").isEqualTo(SUCCESS_TITLE)
                 .jsonPath("$.data.id").isEqualTo("12345")
                 .jsonPath("$.data.firstName").isEqualTo("John");
     }

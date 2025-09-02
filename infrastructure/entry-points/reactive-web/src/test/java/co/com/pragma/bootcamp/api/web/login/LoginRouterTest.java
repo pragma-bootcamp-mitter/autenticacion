@@ -22,6 +22,13 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 import java.util.Set;
 
+import static co.com.pragma.bootcamp.api.util.AuthConstants.BAD_REQUEST_TITLE;
+import static co.com.pragma.bootcamp.api.util.AuthConstants.SUCCESS_CODE;
+import static co.com.pragma.bootcamp.api.util.AuthConstants.SUCCESS_MESSAGE;
+import static co.com.pragma.bootcamp.api.util.AuthConstants.SUCCESS_TITLE;
+import static co.com.pragma.bootcamp.api.util.AuthConstants.VALIDATION_ERROR_CODE;
+import static co.com.pragma.bootcamp.api.util.AuthConstants.VALIDATION_ERROR_MESSAGE;
+import static co.com.pragma.bootcamp.model.exceptions.BusinessErrorCode.BR_401_UNAUTHORIZED;
 import static co.com.pragma.bootcamp.model.exceptions.login.LoginErrors.INVALID_CREDENTIALS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -81,9 +88,9 @@ class LoginRouterTest {
                 .expectStatus().isCreated()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBody()
-                .jsonPath("$.code").isEqualTo("B200-000")
-                .jsonPath("$.message").isEqualTo("Operation carried out successfully")
-                .jsonPath("$.title").isEqualTo("successfully")
+                .jsonPath("$.code").isEqualTo(SUCCESS_CODE)
+                .jsonPath("$.message").isEqualTo(SUCCESS_MESSAGE)
+                .jsonPath("$.title").isEqualTo(SUCCESS_TITLE)
                 .jsonPath("$.data.email").isEqualTo("test@example.com")
                 .jsonPath("$.data.token").isEqualTo("generated-jwt-token");
     }
@@ -103,7 +110,7 @@ class LoginRouterTest {
                 .expectStatus().isUnauthorized()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBody()
-                .jsonPath("$.code").isEqualTo("BR_401_UNAUTHORIZED")
+                .jsonPath("$.code").isEqualTo(BR_401_UNAUTHORIZED)
                 .jsonPath("$.message").isEqualTo("Invalid credentials provided")
                 .jsonPath("$.title").isEqualTo("Authentication error");
     }
@@ -137,8 +144,8 @@ class LoginRouterTest {
                 .expectStatus().isBadRequest()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBody()
-                .jsonPath("$.code").isEqualTo("B400-000")
-                .jsonPath("$.message").isEqualTo("Bad Request-fields bad format")
-                .jsonPath("$.title").isEqualTo("Bad Request");
+                .jsonPath("$.code").isEqualTo(VALIDATION_ERROR_CODE)
+                .jsonPath("$.message").isEqualTo(VALIDATION_ERROR_MESSAGE)
+                .jsonPath("$.title").isEqualTo(BAD_REQUEST_TITLE);
     }
 }
