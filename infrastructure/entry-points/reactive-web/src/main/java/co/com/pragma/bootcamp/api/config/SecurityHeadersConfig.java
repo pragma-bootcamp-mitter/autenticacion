@@ -12,6 +12,8 @@ public class SecurityHeadersConfig implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+
+        //aqui se pueden hacer las validaciones del token con exchange
         HttpHeaders headers = exchange.getResponse().getHeaders();
         headers.set("Content-Security-Policy", "default-src 'self'; frame-ancestors 'self'; form-action 'self'");
         headers.set("Strict-Transport-Security", "max-age=31536000;");

@@ -3,6 +3,7 @@ package co.com.pragma.bootcamp.r2dbc;
 import co.com.pragma.bootcamp.model.user.User;
 import co.com.pragma.bootcamp.r2dbc.adapter.UserRepositoryAdapter;
 import co.com.pragma.bootcamp.r2dbc.entity.UserEntity;
+import co.com.pragma.bootcamp.r2dbc.mapper.UserEntityMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +33,9 @@ class UserRepositoryAdapterTest {
     ObjectMapper mapper;
 
     @Mock
+    UserEntityMapper userEntityMapper;
+
+    @Mock
     TransactionalOperator transactionalOperator;
 
     private UserEntity sampleData;
@@ -45,6 +49,7 @@ class UserRepositoryAdapterTest {
         sampleData.setFirstName("Juan");
         sampleData.setLastName("Pérez");
         sampleData.setEmail("juan@example.com");
+        sampleData.setRoleId(1);
         sampleData.setBaseSalary(new BigDecimal("2000000.00"));
 
         sampleDomain = User.builder()
@@ -114,6 +119,9 @@ class UserRepositoryAdapterTest {
     void save_shouldReturnUser_whenSaveIsSuccessful() {
         when(mapper.map(any(User.class), any())).thenReturn(sampleData);
         when(mapper.map(any(UserEntity.class), any())).thenReturn(sampleDomain);
+
+        //revisar este mapper
+        when(userEntityMapper.toEntity(sampleDomain)).thenReturn(sampleData);
         when(transactionalOperator.execute(any())).thenReturn(Flux.just(sampleData));
 
         Mono<User> result = repositoryAdapter.save(sampleDomain);

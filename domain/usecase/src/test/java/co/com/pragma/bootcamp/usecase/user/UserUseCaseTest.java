@@ -47,7 +47,7 @@ class UserUseCaseTest {
                 .email("juan@example.com")
                 .baseSalary(BigDecimal.valueOf(5000000))
                 .password("password123")
-                .role(Role.builder().id(1).build())
+                .roleId(1)
                 .build();
     }
 

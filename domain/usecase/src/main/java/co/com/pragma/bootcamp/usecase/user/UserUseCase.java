@@ -16,13 +16,6 @@ public class UserUseCase {
     private final UserRepository userRepository;
     private final PasswordGateway passwordGateway;
 
-    public Mono<User> registerUser1(User user) {
-        return userRepository.existsByEmailOrIdentificationDocument(user.getEmail(), user.getIdentificationDocument())
-                .filter(exists -> !Boolean.TRUE.equals(exists))
-                .switchIfEmpty(Mono.error(new BusinessException(DOCUMENT_OR_EMAIL_ALREADY_REGISTERED)))
-                .flatMap(exists -> userRepository.save(user));
-    }
-
 
     public Mono<User> registerUser(User user) {
         return userRepository.existsByEmailOrIdentificationDocument(user.getEmail(), user.getIdentificationDocument())

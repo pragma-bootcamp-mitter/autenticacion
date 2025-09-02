@@ -54,6 +54,12 @@ public class UserRepositoryAdapter
     }
 
     @Override
+    public Mono<User> findByEmail(String email) {
+        return userEntityRepository.findByEmail(email)
+                .map(this::toEntity);
+    }
+
+    @Override
     public Flux<User> findAll() {
         return repository.findAll()
                 .map(userEntityMapper::toDomain);

@@ -1,6 +1,5 @@
 package co.com.pragma.bootcamp.model.user;
 
-import co.com.pragma.bootcamp.model.rol.Role;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,5 +22,5 @@ public class User {
     private String email;
     private BigDecimal baseSalary;
     private String password;
-    private Role role;
+    private Integer roleId;
 }

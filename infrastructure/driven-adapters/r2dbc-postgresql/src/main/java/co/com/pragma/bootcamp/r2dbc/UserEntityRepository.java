@@ -10,4 +10,5 @@ public interface UserEntityRepository extends
         ReactiveCrudRepository<UserEntity, String>, ReactiveQueryByExampleExecutor<UserEntity> {
     Flux<UserEntity> findByEmailOrIdentificationDocument(String email, String identificationDocument);
     Mono<UserEntity> findByIdentificationDocument(String identificationDocument);
+    Mono<UserEntity> findByEmail(String email);
 }

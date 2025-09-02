@@ -12,17 +12,12 @@ import org.springframework.data.relational.core.mapping.Table;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-//corregir nombre de tabla
 @Table("roles")
-public class RolEntity {
+public class RoleEntity {
 
     @Id
     @Column("role_id")
-    private Integer id;
-
-    @Column("name")
+    private Integer roleId;
     private String name;
-
-    @Column("description")
     private String description;
 }

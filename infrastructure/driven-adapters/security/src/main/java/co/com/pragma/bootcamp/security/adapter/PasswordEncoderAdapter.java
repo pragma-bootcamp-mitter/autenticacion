@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.r2dbc.adapter;
+package co.com.pragma.bootcamp.security.adapter;
 
 
 import co.com.pragma.bootcamp.model.login.gateways.PasswordGateway;
