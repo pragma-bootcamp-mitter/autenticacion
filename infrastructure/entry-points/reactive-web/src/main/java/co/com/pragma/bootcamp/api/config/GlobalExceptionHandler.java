@@ -3,6 +3,7 @@ package co.com.pragma.bootcamp.api.config;
 import co.com.pragma.bootcamp.api.dto.ApiResponse;
 import co.com.pragma.bootcamp.model.exceptions.BusinessErrorCode;
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
+import co.com.pragma.bootcamp.model.exceptions.login.LoginBusinessException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolationException;
@@ -35,6 +36,16 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
                 ApiResponse<?> apiResponse = ApiResponse.businessError(
                         errorCode.getCode(),
                         businessEx.getUserError().getMessage(),
+                        errorCode.getDefaultMessage()
+                );
+                yield buildErrorResponse(exchange, status, apiResponse);
+            }
+            case LoginBusinessException loginEx -> {
+                BusinessErrorCode errorCode = loginEx.getLoginError().getErrorCode();
+                HttpStatus status = mapBusinessErrorCodeToHttpStatus(errorCode);
+                ApiResponse<?> apiResponse = ApiResponse.businessError(
+                        errorCode.getCode(),
+                        loginEx.getLoginError().getMessage(),
                         errorCode.getDefaultMessage()
                 );
                 yield buildErrorResponse(exchange, status, apiResponse);
@@ -79,6 +90,7 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
             case BR_409_CONFLICT -> HttpStatus.CONFLICT;
             case BR_404_NOT_FOUND -> HttpStatus.NOT_FOUND;
             case BR_400_BAD_REQUEST -> HttpStatus.BAD_REQUEST;
+            case BR_401_UNAUTHORIZED -> HttpStatus.UNAUTHORIZED;
             default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };
     }

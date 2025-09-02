@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.security.jwt;
+package co.com.pragma.bootcamp.security.config;
 
 import co.com.pragma.bootcamp.security.adapter.TokenAdapter;
 import org.springframework.http.HttpHeaders;

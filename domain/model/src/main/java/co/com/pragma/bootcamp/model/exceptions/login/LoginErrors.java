@@ -4,8 +4,8 @@ import co.com.pragma.bootcamp.model.exceptions.BusinessErrorCode;
 
 public enum LoginErrors {
     INVALID_CREDENTIALS(
-            BusinessErrorCode.BR_404_NOT_FOUND,
-            "Invalid credentials"
+            BusinessErrorCode.BR_401_UNAUTHORIZED,
+            "Invalid credentials provided"
     ),
     ROLE_NOT_FOUND(
             BusinessErrorCode.BR_404_NOT_FOUND,

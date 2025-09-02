@@ -1,7 +1,6 @@
 package co.com.pragma.bootcamp.security.config;
 
 import co.com.pragma.bootcamp.security.adapter.TokenAdapter;
-import co.com.pragma.bootcamp.security.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +33,8 @@ public class SecurityConfig {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers("/swagger-ui/**").permitAll()
+                        .pathMatchers("/v3/api-docs/**").permitAll()
                         .pathMatchers("/api/v1/login/**").permitAll()
                         .pathMatchers("/api/v1/users/**").hasAnyRole("ADMIN", "ADVISOR")
                         .anyExchange().authenticated()
