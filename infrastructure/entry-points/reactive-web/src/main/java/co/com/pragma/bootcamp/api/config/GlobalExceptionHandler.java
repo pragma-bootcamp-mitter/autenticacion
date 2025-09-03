@@ -3,6 +3,7 @@ package co.com.pragma.bootcamp.api.config;
 import co.com.pragma.bootcamp.api.dto.ApiResponse;
 import co.com.pragma.bootcamp.model.exceptions.BusinessErrorCode;
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
+import co.com.pragma.bootcamp.model.exceptions.login.LoginBusinessException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolationException;
@@ -16,6 +17,14 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Map;
+
+import static co.com.pragma.bootcamp.api.util.AuthConstants.ERROR_KEY;
+import static co.com.pragma.bootcamp.api.util.AuthConstants.FIELD_KEY;
+import static co.com.pragma.bootcamp.api.util.AuthConstants.GENERIC_ERROR_MESSAGE;
+import static co.com.pragma.bootcamp.api.util.AuthConstants.INTERNAL_SERVER_ERROR_CODE;
+import static co.com.pragma.bootcamp.api.util.AuthConstants.INTERNAL_SERVER_ERROR_TITLE;
+import static co.com.pragma.bootcamp.api.util.AuthConstants.SERIALIZATION_ERROR_MESSAGE;
+import static co.com.pragma.bootcamp.api.util.AuthConstants.UNEXPECTED_ERROR_MESSAGE;
 
 @Component
 @Slf4j
@@ -39,10 +48,21 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
                 );
                 yield buildErrorResponse(exchange, status, apiResponse);
             }
+            case LoginBusinessException loginEx -> {
+                BusinessErrorCode errorCode = loginEx.getLoginError().getErrorCode();
+                HttpStatus status = mapBusinessErrorCodeToHttpStatus(errorCode);
+                ApiResponse<?> apiResponse = ApiResponse.businessError(
+                        errorCode.getCode(),
+                        loginEx.getLoginError().getMessage(),
+                        errorCode.getDefaultMessage()
+                );
+                yield buildErrorResponse(exchange, status, apiResponse);
+            }
             case ConstraintViolationException validationEx -> {
                 HttpStatus status = HttpStatus.BAD_REQUEST;
                 List<Map<String, String>> errors = validationEx.getConstraintViolations().stream()
-                        .map(v -> Map.of("field", v.getPropertyPath().toString(), "error", v.getMessage()))
+                        .map(v ->
+                                Map.of(FIELD_KEY, v.getPropertyPath().toString(), ERROR_KEY, v.getMessage()))
                         .toList();
                 ApiResponse<?> apiResponse = ApiResponse.validationError(errors);
                 yield buildErrorResponse(exchange, status, apiResponse);
@@ -50,11 +70,11 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
             default -> {
                 HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
                 ApiResponse<?> apiResponse = ApiResponse.businessError(
-                        "GEN_500",
-                        "An unexpected error has occurred",
-                        "Internal Server Error"
+                        INTERNAL_SERVER_ERROR_CODE,
+                        GENERIC_ERROR_MESSAGE,
+                        INTERNAL_SERVER_ERROR_TITLE
                 );
-                log.error("Unexpected error during request processing", ex);
+                log.error(UNEXPECTED_ERROR_MESSAGE, ex);
                 yield buildErrorResponse(exchange, status, apiResponse);
             }
         };
@@ -68,7 +88,7 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
             var buffer = exchange.getResponse().bufferFactory().wrap(bytes);
             return exchange.getResponse().writeWith(Mono.just(buffer));
         } catch (JsonProcessingException e) {
-            log.error("Error serializing error response", e);
+            log.error(SERIALIZATION_ERROR_MESSAGE, e);
             exchange.getResponse().setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
             return exchange.getResponse().setComplete();
         }
@@ -79,6 +99,7 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
             case BR_409_CONFLICT -> HttpStatus.CONFLICT;
             case BR_404_NOT_FOUND -> HttpStatus.NOT_FOUND;
             case BR_400_BAD_REQUEST -> HttpStatus.BAD_REQUEST;
+            case BR_401_UNAUTHORIZED -> HttpStatus.UNAUTHORIZED;
             default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };
     }

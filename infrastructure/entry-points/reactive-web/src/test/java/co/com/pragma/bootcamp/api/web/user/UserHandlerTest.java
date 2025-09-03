@@ -1,7 +1,7 @@
-package co.com.pragma.bootcamp.api;
+package co.com.pragma.bootcamp.api.web.user;
 
-import co.com.pragma.bootcamp.api.dto.UserRequest;
-import co.com.pragma.bootcamp.api.dto.UserResponse;
+import co.com.pragma.bootcamp.api.dto.user.UserRequest;
+import co.com.pragma.bootcamp.api.dto.user.UserResponse;
 import co.com.pragma.bootcamp.api.helper.ValidatorUtil;
 import co.com.pragma.bootcamp.api.mapper.UserMapper;
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;

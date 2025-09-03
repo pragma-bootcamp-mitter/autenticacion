@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.api.dto;
+package co.com.pragma.bootcamp.api.dto.user;
 
 import lombok.Data;
 import java.math.BigDecimal;
@@ -15,4 +15,6 @@ public class UserResponse {
     private String phoneNumber;
     private String email;
     private BigDecimal baseSalary;
+    private String password;
+    private Integer roleId;
 }

@@ -31,3 +31,7 @@ adapters:
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:}
     schema: ${DB_SCHEMA:public}
+
+jwt:
+  secret: ${JWT_SECRET:}
+  expiration-time: ${JWT_EXPIRATION:}

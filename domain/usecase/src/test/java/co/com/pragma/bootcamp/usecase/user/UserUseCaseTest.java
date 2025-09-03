@@ -1,6 +1,8 @@
 package co.com.pragma.bootcamp.usecase.user;
 
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
+import co.com.pragma.bootcamp.model.login.gateways.PasswordGateway;
+import co.com.pragma.bootcamp.model.rol.Role;
 import co.com.pragma.bootcamp.model.user.User;
 import co.com.pragma.bootcamp.model.user.gateways.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +29,9 @@ class UserUseCaseTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private PasswordGateway passwordGateway;
+
     @InjectMocks
     private UserUseCase userUseCase;
 
@@ -41,6 +46,8 @@ class UserUseCaseTest {
                 .lastName("Pérez")
                 .email("juan@example.com")
                 .baseSalary(BigDecimal.valueOf(5000000))
+                .password("password123")
+                .roleId(1)
                 .build();
     }
 

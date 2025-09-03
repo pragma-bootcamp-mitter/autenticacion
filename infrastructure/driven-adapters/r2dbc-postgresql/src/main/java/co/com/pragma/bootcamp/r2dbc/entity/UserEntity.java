@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -25,4 +26,8 @@ public class UserEntity {
     private String phoneNumber;
     private String email;
     private BigDecimal baseSalary;
+    private String password;
+
+    @Column("role_id")
+    private Integer roleId;
 }

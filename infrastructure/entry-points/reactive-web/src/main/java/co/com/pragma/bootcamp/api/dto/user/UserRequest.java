@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.api.dto;
+package co.com.pragma.bootcamp.api.dto.user;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -38,4 +38,8 @@ public class UserRequest {
     @DecimalMin(value = "0.0", message = "The base salary cannot be negative")
     @DecimalMax(value = "15000000.0", message = "The base salary cannot exceed 15 million")
     private BigDecimal baseSalary;
+
+    @NotBlank(message = "The password is mandatory")
+    private String password;
+    private Integer roleId;
 }
