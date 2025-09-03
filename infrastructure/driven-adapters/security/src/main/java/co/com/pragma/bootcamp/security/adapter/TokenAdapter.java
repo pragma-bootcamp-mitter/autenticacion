@@ -28,11 +28,12 @@ public class TokenAdapter implements TokenGateway {
     }
 
     @Override
-    public Mono<LogIn> generateToken(String email, String role) {
+    public Mono<LogIn> generateToken(String email, String role, String documentId) {
         return Mono.fromCallable(() -> {
             String token = Jwts.builder()
-                    .subject(email)
+                    .subject(documentId)
                     .claim("role", role)
+                    .claim("email", email)
                     .issuedAt(new Date())
                     .expiration(new Date(System.currentTimeMillis() + expirationTime))
                     .signWith(secretKey)

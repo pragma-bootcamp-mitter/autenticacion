@@ -63,7 +63,6 @@ class LoginHandlerTest {
                 .build();
 
         testLoginResponse = LoginResponse.builder()
-                .email("test@example.com")
                 .token("generated-token")
                 .build();
     }

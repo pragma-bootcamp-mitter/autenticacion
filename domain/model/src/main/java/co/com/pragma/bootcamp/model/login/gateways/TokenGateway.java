@@ -4,5 +4,5 @@ import co.com.pragma.bootcamp.model.login.LogIn;
 import reactor.core.publisher.Mono;
 
 public interface TokenGateway {
-    Mono<LogIn> generateToken(String email, String role);
+    Mono<LogIn> generateToken(String email, String role, String documentId);
 }

@@ -48,18 +48,19 @@ class LogInUseCaseTest {
     private String email;
     private String rawPassword;
     private String encodedPassword;
-    private String generatedToken;
 
     @BeforeEach
     void setUp() {
         email = "test@example.com";
         rawPassword = "password123";
         encodedPassword = "encodedPassword123";
-        generatedToken = "generated-jwt-token";
+        String generatedToken = "generated-jwt-token";
+        String identificationDocument = "1234567890";
 
         testUser = User.builder()
                 .email(email)
                 .password(encodedPassword)
+                .identificationDocument(identificationDocument)
                 .roleId(1)
                 .build();
 
@@ -76,16 +77,13 @@ class LogInUseCaseTest {
 
     @Test
     void login_shouldReturnLogIn_whenCredentialsAreValid() {
-        // GIVEN
         when(userRepository.findByEmail(anyString())).thenReturn(Mono.just(testUser));
         when(passwordGateway.matches(rawPassword, encodedPassword)).thenReturn(true);
         when(roleRepository.findById(testUser.getRoleId())).thenReturn(Mono.just(testRole));
-        when(tokenGateway.generateToken(anyString(), anyString())).thenReturn(Mono.just(testLogIn));
+        when(tokenGateway.generateToken(anyString(), anyString(), anyString())).thenReturn(Mono.just(testLogIn));
 
-        // WHEN
         Mono<LogIn> result = logInUseCase.login(email, rawPassword);
 
-        // THEN
         StepVerifier.create(result)
                 .expectNext(testLogIn)
                 .verifyComplete();
@@ -93,13 +91,10 @@ class LogInUseCaseTest {
 
     @Test
     void login_shouldThrowUserNotFoundException_whenUserDoesNotExist() {
-        // GIVEN
         when(userRepository.findByEmail(anyString())).thenReturn(Mono.empty());
 
-        // WHEN
         Mono<LogIn> result = logInUseCase.login(email, rawPassword);
 
-        // THEN
         StepVerifier.create(result)
                 .expectErrorMatches(throwable ->
                         throwable instanceof BusinessException &&
@@ -110,14 +105,11 @@ class LogInUseCaseTest {
 
     @Test
     void login_shouldThrowInvalidCredentialsException_whenPasswordDoesNotMatch() {
-        // GIVEN
         when(userRepository.findByEmail(anyString())).thenReturn(Mono.just(testUser));
         when(passwordGateway.matches(rawPassword, encodedPassword)).thenReturn(false);
 
-        // WHEN
         Mono<LogIn> result = logInUseCase.login(email, rawPassword);
 
-        // THEN
         StepVerifier.create(result)
                 .expectErrorMatches(throwable ->
                         throwable instanceof LoginBusinessException &&
@@ -128,15 +120,12 @@ class LogInUseCaseTest {
 
     @Test
     void login_shouldThrowRoleNotFoundException_whenRoleDoesNotExist() {
-        // GIVEN
         when(userRepository.findByEmail(anyString())).thenReturn(Mono.just(testUser));
         when(passwordGateway.matches(rawPassword, encodedPassword)).thenReturn(true);
         when(roleRepository.findById(testUser.getRoleId())).thenReturn(Mono.empty());
 
-        // WHEN
         Mono<LogIn> result = logInUseCase.login(email, rawPassword);
 
-        // THEN
         StepVerifier.create(result)
                 .expectErrorMatches(throwable ->
                         throwable instanceof LoginBusinessException &&
@@ -147,18 +136,15 @@ class LogInUseCaseTest {
 
     @Test
     void login_shouldThrowException_whenTokenGenerationFails() {
-        // GIVEN
         RuntimeException tokenGenerationException = new RuntimeException("Token generation failed");
 
         when(userRepository.findByEmail(anyString())).thenReturn(Mono.just(testUser));
         when(passwordGateway.matches(rawPassword, encodedPassword)).thenReturn(true);
         when(roleRepository.findById(testUser.getRoleId())).thenReturn(Mono.just(testRole));
-        when(tokenGateway.generateToken(anyString(), anyString())).thenReturn(Mono.error(tokenGenerationException));
+        when(tokenGateway.generateToken(anyString(), anyString(), anyString())).thenReturn(Mono.error(tokenGenerationException));
 
-        // WHEN
         Mono<LogIn> result = logInUseCase.login(email, rawPassword);
 
-        // THEN
         StepVerifier.create(result)
                 .expectErrorMatches(throwable -> throwable instanceof RuntimeException &&
                         throwable.getMessage().equals("Token generation failed"))

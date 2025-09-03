@@ -26,6 +26,7 @@ class TokenAdapterTest {
     private static final long MOCK_EXPIRATION_TIME = TimeUnit.HOURS.toMillis(1);
     private static final String TEST_EMAIL = "test@example.com";
     private static final String TEST_ROLE = "USER";
+    private static final String TEST_DOCUMENT_ID = "101";
     private SecretKey mockSecretKey;
 
     @BeforeEach
@@ -36,7 +37,7 @@ class TokenAdapterTest {
 
     @Test
     void generateToken_shouldReturnValidTokenAndLoginObject() {
-        Mono<LogIn> result = tokenAdapter.generateToken(TEST_EMAIL, TEST_ROLE);
+        Mono<LogIn> result = tokenAdapter.generateToken(TEST_EMAIL, TEST_ROLE, TEST_DOCUMENT_ID);
 
         StepVerifier.create(result)
                 .expectNextMatches(login -> {

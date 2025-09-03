@@ -29,7 +29,7 @@ public class LogInUseCase {
                 .switchIfEmpty(Mono.error(new LoginBusinessException(INVALID_CREDENTIALS)))
                 .flatMap(user -> roleRepository.findById(user.getRoleId())
                         .switchIfEmpty(Mono.error(new LoginBusinessException(ROLE_NOT_FOUND)))
-                        .flatMap(role -> tokenGateway.generateToken(user.getEmail(), role.getName()))
+                        .flatMap(role -> tokenGateway.generateToken(user.getEmail(), role.getName(), user.getIdentificationDocument()))
                 );
     }
 }

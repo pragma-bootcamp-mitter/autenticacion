@@ -68,7 +68,6 @@ class LoginRouterTest {
                 .build();
 
         testLoginResponse = LoginResponse.builder()
-                .email("test@example.com")
                 .token("generated-jwt-token")
                 .build();
     }
@@ -91,7 +90,6 @@ class LoginRouterTest {
                 .jsonPath("$.code").isEqualTo(SUCCESS_CODE)
                 .jsonPath("$.message").isEqualTo(SUCCESS_MESSAGE)
                 .jsonPath("$.title").isEqualTo(SUCCESS_TITLE)
-                .jsonPath("$.data.email").isEqualTo("test@example.com")
                 .jsonPath("$.data.token").isEqualTo("generated-jwt-token");
     }
 
