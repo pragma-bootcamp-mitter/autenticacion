@@ -19,6 +19,8 @@ import org.springframework.security.web.server.authentication.AuthenticationWebF
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    public static final String ADVISOR = "ADVISOR";
+    public static final String CLIENT = "CLIENT";
     private final ReactiveAuthenticationManager authenticationManager;
     private final TokenAdapter tokenGateway;
     public static final String ADMIN = "ADMIN";
@@ -38,9 +40,9 @@ public class SecurityConfig {
                         .pathMatchers("/swagger-ui/**").permitAll()
                         .pathMatchers("/v3/api-docs/**").permitAll()
                         .pathMatchers("/api/v1/login/**").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/api/v1/users/**").hasAnyRole(ADMIN, "ADVISOR")
+                        .pathMatchers(HttpMethod.POST, "/api/v1/users/**").hasAnyRole(ADMIN, ADVISOR)
                         .pathMatchers(HttpMethod.GET, "/api/v1/users").hasRole(ADMIN)
-                        .pathMatchers(HttpMethod.GET, "/api/v1/users/{document}").hasAnyRole(ADMIN, "ADVISOR", "CLIENT")
+                        .pathMatchers(HttpMethod.GET, "/api/v1/users/{document}").hasAnyRole(ADMIN, ADVISOR, CLIENT)
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)

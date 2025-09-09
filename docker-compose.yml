@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  autenticacion-service:
+    build:
+      context: ./autenticacion
+      dockerfile: deployment/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=${DB_HOST_AUTENTICACION}
+      - DB_PORT=${DB_PORT_AUTENTICACION}
+      - DB_NAME=${DB_NAME_AUTENTICACION}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION}
+    depends_on:
+      - postgres-db-autenticacion
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  solicitudes-service:
+    build:
+      context: ./solicitudes
+      dockerfile: deployment/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - DB_HOST=${DB_HOST_SOLICITUDES}
+      - DB_PORT=${DB_PORT_SOLICITUDES}
+      - DB_NAME=${DB_NAME_SOLICITUDES}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - AUTH_BASE_URL=${AUTH_BASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - autenticacion-service
+      - postgres-db-solicitudes
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  postgres-db-autenticacion:
+    image: postgres:13
+    container_name: postgres-db-autenticacion
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${DB_NAME_AUTENTICACION}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres-data-autenticacion:/var/lib/postgresql/data
+      - ./init-scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+
+  postgres-db-solicitudes:
+    image: postgres:13
+    container_name: postgres-db-solicitudes
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=${DB_NAME_SOLICITUDES}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres-data-solicitudes:/var/lib/postgresql/data
+
+volumes:
+  postgres-data-autenticacion:
+  postgres-data-solicitudes:
